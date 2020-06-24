@@ -599,14 +599,21 @@ namespace HunterPie.Core
             {
                 if (synchandler.isHost)
                 {
-                    bool result = synchandler.createSessionIfNotExist(SessionID);
+                    bool result = synchandler.createSessionIfNotExist(SessionID + Name);
                     System.Diagnostics.Debug.Assert(result);
                     synchandler.hasSession = true;
                 }
                 else
                 {
-                    synchandler.Session = SessionID;
-                    synchandler.hasSession = synchandler.sessionExists();
+                    for (int i = 0; i < PlayerParty.Members.Count; i++)
+                    {
+                        if (PlayerParty.Members[i].IsPartyLeader)
+                        {
+                            synchandler.Session = SessionID + PlayerParty.Members[i].Name;
+                            synchandler.hasSession = synchandler.sessionExists();
+                            return;
+                        }
+                    }
                 }
             }
         }
