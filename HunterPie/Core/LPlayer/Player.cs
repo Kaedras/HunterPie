@@ -594,11 +594,16 @@ namespace HunterPie.Core
             long Address = Memory.Address.BASE + Memory.Address.SESSION_OFFSET;
             Address = Scanner.READ_MULTILEVEL_PTR(Address, Memory.Address.Offsets.SessionOffsets);
             SESSION_ADDRESS = Address;
+            string oldSessionID = SessionID;
             SessionID = Scanner.READ_STRING(SESSION_ADDRESS, 12);
             if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
             {
                 if (synchandler.isHost)
                 {
+                    if(SessionID != oldSessionID)
+                    {
+                        synchandler.deleteSession();
+                    }
                     bool result = synchandler.createSessionIfNotExist(SessionID + Name);
                     System.Diagnostics.Debug.Assert(result);
                     synchandler.hasSession = true;
