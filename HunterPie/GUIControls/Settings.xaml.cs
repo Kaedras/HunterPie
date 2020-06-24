@@ -158,6 +158,10 @@ namespace HunterPie.GUIControls {
             settingsUI.switchInsectGlaiveHelper.IsEnabled = settings.Overlay.ClassesWidget.InsectGlaiveHelper.Enabled;
             settingsUI.switchBowHelper.IsEnabled = settings.Overlay.ClassesWidget.BowHelper.Enabled;
             
+            // Synchronisation settings
+            settingsUI.switchEnableSync.IsEnabled = settings.HunterPie.Sync.Enabled;
+            settingsUI.syncServerTextBox.Text = settings.HunterPie.Sync.ServerUrl;
+            settingsUI.SyncIntervals.Value = settings.HunterPie.Sync.Delay;
 
         }
 
@@ -284,6 +288,11 @@ namespace HunterPie.GUIControls {
                 settings.Overlay.AbnormalitiesWidget.BarPresets[i].Enabled = abnormBar.Enabled;
                 i++;
             }
+
+            // Synchronisation settings
+            settings.HunterPie.Sync.Enabled = settingsUI.switchEnableSync.IsEnabled;
+            settings.HunterPie.Sync.ServerUrl = settingsUI.syncServerTextBox.Text;
+            settings.HunterPie.Sync.Delay = (int)settingsUI.SyncIntervals.Value;
 
             // and then save settings
             UserSettings.SaveNewConfig();

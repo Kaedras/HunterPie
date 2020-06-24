@@ -108,6 +108,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+	<Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -168,6 +169,7 @@
     <Compile Include="Core\LPlayer\AbnormalityData.cs" />
     <Compile Include="Core\LPlayer\Activities.cs" />
     <Compile Include="Core\LPlayer\Data.cs" />
+	<Compile Include="Core\Synchandler.cs" />
     <Compile Include="GUIControls\Changelog.xaml.cs">
       <DependentUpon>Changelog.xaml</DependentUpon>
     </Compile>

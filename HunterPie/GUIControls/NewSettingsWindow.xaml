@@ -777,6 +777,35 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
+            <TabItem Width="200">
+                <TabItem.Header>
+                    <Canvas>
+                        <TextBlock Canvas.Left="20" FontWeight="Medium" Canvas.Top="2">
+                            <TextBlock.Text>
+                                <Binding Mode="OneTime" XPath="Settings/String[@ID='STATIC_SYNC_SETTINGS']/@Name" FallbackValue="Synchronisation"/>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Canvas>
+                </TabItem.Header>
+                <ScrollViewer>
+                    <StackPanel >
+                        <custom:Switcher x:Name="switchEnableSync" Text="{Binding Mode=OneTime, XPath=/Strings/Client/Settings/String[@ID\=\'ENABLE_SYNC\']/@Name, FallbackValue='Enable experimental synchronisation'}" RestartVisibility="Visible" MinWidth="500" ToolTip="{Binding Mode=OneTime, XPath=/Strings/Client/Settings/String[@ID\=\'ENABLE_SYNC_DESC\']/@Name}" HorizontalAlignment="Center"/>
+                        <DockPanel HorizontalAlignment="Center" MinWidth="500">
+                            <TextBlock Text="{Binding Mode=OneTime, XPath=/Strings/Client/Settings/String[@ID\=\'STATIC_SYNCSERVER\']/@Name, FallbackValue='Server url:'}" Foreground="WhiteSmoke" Canvas.Top="0" FontFamily="Segoe UI Light" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBox x:Name="syncServerTextBox" TextWrapping="Wrap" Background="{x:Null}" Foreground="#FF9E9D9D" BorderBrush="#FFABADB3" BorderThickness="0,0,0,1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="200" SelectionBrush="#FFD31D1D" MinWidth="200" Margin="0" Canvas.Top="0" HorizontalAlignment="Right" />
+                        </DockPanel>
+                        <DockPanel HorizontalAlignment="Center" MinWidth="500">
+                            <TextBlock Foreground="WhiteSmoke" FontFamily="Segoe UI Light">
+                                <TextBlock.Text>
+                                    <Binding Mode="OneTime" XPath="Settings/String[@ID='STATIC_SYNC_INTERVAL']/@Name" FallbackValue="Intervals in ms:"/>
+                                </TextBlock.Text>
+                            </TextBlock>
+                            <Slider x:Name="SyncIntervals" Style="{StaticResource Horizontal_Slider}" Foreground="#FF3C3C3C" Maximum="2000" Minimum="100" SmallChange="10" Value="500" Canvas.Top="5" IsSnapToTickEnabled="True" Margin="10,0" MinWidth="300" LargeChange="100" TickFrequency="100" />
+                            <TextBlock Text="{Binding Value, ElementName=SyncIntervals}" FontFamily="Segoe UI Light" Foreground="WhiteSmoke"/>
+                        </DockPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
     </Grid>
 </UserControl>

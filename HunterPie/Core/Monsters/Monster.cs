@@ -19,6 +19,7 @@ namespace HunterPie.Core {
         private float enrageTimer = 0;
         private float sizeMultiplier;
 
+        public Synchandler synchandler;
         private long MonsterAddress
         {
             get => monsterAddress;
@@ -191,6 +192,10 @@ namespace HunterPie.Core {
         }
 
         protected virtual void _onMonsterDespawn() {
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+            {
+                synchandler.replaceMonster(MonsterNumber - 1);
+            }
             OnMonsterDespawn?.Invoke(this, EventArgs.Empty);
         }
 
@@ -204,6 +209,10 @@ namespace HunterPie.Core {
 
         protected virtual void _onTargetted() {
             OnTargetted?.Invoke(this, EventArgs.Empty);
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled && isTarget)
+            {
+                synchandler.activeMonster = MonsterNumber - 1;
+            }
         }
 
         protected virtual void _onCrownChange() {
@@ -232,6 +241,11 @@ namespace HunterPie.Core {
 
         ~Monster() {
             Id = null;
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+            {
+                bool result = synchandler.replaceMonster(MonsterNumber - 1);
+                System.Diagnostics.Debug.Assert(result);
+            }
             Weaknesses?.Clear();
         }
 
@@ -268,6 +282,11 @@ namespace HunterPie.Core {
             IsAlive = false;
             Parts.Clear();
             Ailments.Clear();
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+            {
+                synchandler.clearParts(MonsterNumber - 1);
+                synchandler.clearAilments(MonsterNumber - 1);
+            }
 #if DEBUG
             Debugger.Log($"Cleared parts: {Parts.Count} | {Ailments.Count}");
 #endif
@@ -442,6 +461,11 @@ namespace HunterPie.Core {
                 Part part = new Part(MonsterInfo, MonsterInfo.Parts[i], i);
                 Parts.Add(part);
             }
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+            {
+                synchandler.clearParts(MonsterNumber - 1);
+                synchandler.parts[MonsterNumber - 1] = Parts;
+            }
         }
 
         private void GetMonsterPartsInfo()
@@ -465,6 +489,13 @@ namespace HunterPie.Core {
                     if (CurrentPart.Address > 0)
                     {
                         sMonsterRemovablePart MonsterRemovablePartData = Scanner.Win32.Read<sMonsterRemovablePart>(CurrentPart.Address);
+                        if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                        {
+                            if (!synchandler.isHost && synchandler.hasSession)
+                            {
+                                MonsterRemovablePartData.Data.Health = CurrentPart.Health;
+                            }
+                        }
                         CurrentPart.SetPartInfo(MonsterRemovablePartData.Data);
                     } else
                     {
@@ -483,6 +514,13 @@ namespace HunterPie.Core {
                             {
                                 CurrentPart.Address = MonsterRemovablePartAddress;
                                 CurrentPart.IsRemovable = true;
+                                if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                                {
+                                    if (!synchandler.isHost && synchandler.hasSession)
+                                    {
+                                        MonsterRemovablePartData.Data.Health = CurrentPart.Health;
+                                    }
+                                }
                                 CurrentPart.SetPartInfo(MonsterRemovablePartData.Data);
                                 RemovablePartIndex++;
                                 do
@@ -502,6 +540,13 @@ namespace HunterPie.Core {
                     if (CurrentPart.Address > 0)
                     {
                         sMonsterPart MonsterPartData = Scanner.Win32.Read<sMonsterPart>(CurrentPart.Address);
+                        if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                        {
+                            if (!synchandler.isHost && synchandler.hasSession)
+                            {
+                                MonsterPartData.Data.Health = CurrentPart.Health;
+                            }
+                        }
                         CurrentPart.SetPartInfo(MonsterPartData.Data);
 
                     } else
@@ -510,6 +555,13 @@ namespace HunterPie.Core {
                         CurrentPart.Address = MonsterPartAddress + (NormalPartIndex * 0x1F8);
                         CurrentPart.Group = CurrentPartInfo.GroupId;
 
+                        if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                        {
+                            if (!synchandler.isHost && synchandler.hasSession)
+                            {
+                                MonsterPartData.Data.Health = CurrentPart.Health;
+                            }
+                        }
                         CurrentPart.SetPartInfo(MonsterPartData.Data);
 
                         //Debugger.Debug(Helpers.Serialize(MonsterPartData));
@@ -631,7 +683,22 @@ namespace HunterPie.Core {
                     if (status.Address == 0) continue;
 
                     float maxBuildup = Math.Max(0, Scanner.Read<float>(status.Address + 0x1C8));
-                    float currentBuildup = Math.Max(0, Scanner.Read<float>(status.Address + 0x1B8));
+                    float currentBuildup;
+                    if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                    {
+                        if (!synchandler.isHost && synchandler.hasSession)
+                        {
+                            currentBuildup = status.Buildup;
+                        }
+                        else
+                        {
+                            currentBuildup = Math.Max(0, Scanner.Read<float>(status.Address + 0x1B8));
+                        }
+                    }
+                    else
+                    {
+                        currentBuildup = Math.Max(0, Scanner.Read<float>(status.Address + 0x1B8));
+                    }
                     float maxDuration = Math.Max(0, Scanner.Read<float>(status.Address + 0x19C));
                     float currentDuration = Math.Max(0, Scanner.Read<float>(status.Address + 0x1F8));
                     byte counter = Scanner.Read<byte>(status.Address + 0x200);
@@ -689,6 +756,10 @@ namespace HunterPie.Core {
                         }
                     }
                     StatusPtr = Scanner.Read<long>(StatusPtr + 0x18);
+                }
+                if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                {
+                    synchandler.ailments[MonsterNumber - 1] = Ailments;
                 }
             }
         }

@@ -13,6 +13,7 @@ namespace HunterPie.Core
         public Monster FirstMonster;
         public Monster SecondMonster;
         public Monster ThirdMonster;
+        public Synchandler synchandler;
         public Monster HuntedMonster
         {
             get
@@ -69,6 +70,14 @@ namespace HunterPie.Core
             FirstMonster = new Monster(1);
             SecondMonster = new Monster(2);
             ThirdMonster = new Monster(3);
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+            {
+                synchandler = new Synchandler();
+                Player.synchandler = synchandler;
+                FirstMonster.synchandler = synchandler;
+                SecondMonster.synchandler = synchandler;
+                ThirdMonster.synchandler = synchandler;
+            }
         }
 
         public void DestroyInstances()
@@ -77,6 +86,10 @@ namespace HunterPie.Core
             FirstMonster = null;
             SecondMonster = null;
             ThirdMonster = null;
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+            {
+                synchandler.stopSyncThread();
+            }
         }
 
         public void StartScanning()
@@ -89,6 +102,10 @@ namespace HunterPie.Core
             ThirdMonster.StartThreadingScan();
             Debugger.Warn(GStrings.GetLocalizationByXPath("/Console/String[@ID='MESSAGE_GAME_SCANNER_INITIALIZED']"));
             IsActive = true;
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+            {
+                synchandler.startSyncThread();
+            }
         }
 
         public void StopScanning()

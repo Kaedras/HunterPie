@@ -21,6 +21,8 @@ namespace HunterPie.Core
         private string sessionId;
         private long classAddress;
 
+        public Synchandler synchandler;
+
         private readonly int[] HarvestBoxZones = 
         {
             301,
@@ -593,6 +595,20 @@ namespace HunterPie.Core
             Address = Scanner.READ_MULTILEVEL_PTR(Address, Memory.Address.Offsets.SessionOffsets);
             SESSION_ADDRESS = Address;
             SessionID = Scanner.READ_STRING(SESSION_ADDRESS, 12);
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+            {
+                if (synchandler.isHost)
+                {
+                    bool result = synchandler.createSessionIfNotExist(SessionID);
+                    System.Diagnostics.Debug.Assert(result);
+                    synchandler.hasSession = true;
+                }
+                else
+                {
+                    synchandler.Session = SessionID;
+                    synchandler.hasSession = synchandler.sessionExists();
+                }
+            }
         }
 
         private void GetSteamSession()
@@ -685,6 +701,13 @@ namespace HunterPie.Core
                     PlayerParty[i].MR = MR;
                     PlayerParty[i].IsMe = playerName == Name && HR == Level;
                     PlayerParty[i].SetPlayerInfo(playerName, playerWeapon, playerDamage, playerDamagePercentage);
+                }
+                if (PlayerParty.Size > 0 && UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                {
+                    if (PlayerParty.Members[0].IsMe)
+                    {
+                        synchandler.isHost = true;
+                    }
                 }
             }
 

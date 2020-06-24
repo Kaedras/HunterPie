@@ -136,6 +136,7 @@ namespace HunterPie.Core {
                 public Launch Launch { get; set; } = new Launch();
                 public Options Options { get; set; } = new Options();
                 public Debug Debug { get; set; } = new Debug();
+                public Sync Sync { get; set; } = new Sync();
             }
 
             public class Update {
@@ -216,6 +217,13 @@ namespace HunterPie.Core {
                 public bool ShowDebugMessages { get; set; } = false;
                 public string CustomMonsterData { get; set; } = null;
                 public bool LoadCustomMonsterData { get; set; } = false;
+            }
+
+            public class Sync
+            {
+                public bool Enabled { get; set; } = false;
+                public string ServerUrl { get; set; } = "";
+                public int Delay { get; set; } = 500;
             }
         }
 
