@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Web;
-using HunterPie.Logger;
+using Debugger = HunterPie.Logger.Debugger;
 
 namespace HunterPie.Core
 {
@@ -25,7 +25,7 @@ namespace HunterPie.Core
             set
             {
                 _sessionID = HttpUtility.UrlEncode(value);
-                sessionUrlString = serverUrl + "/" + SessionID + PartyLeader;
+                sessionUrlString = serverUrl + "/session/" + SessionID + PartyLeader;
             }
         }
         private string _partyLeader = "";
@@ -35,7 +35,7 @@ namespace HunterPie.Core
             set
             {
                 _partyLeader = HttpUtility.UrlEncode(value);
-                sessionUrlString = serverUrl + "/" + SessionID + PartyLeader;
+                sessionUrlString = serverUrl + "/session/" + SessionID + PartyLeader;
             }
         }
         public bool isInParty { get; set; } = false;
@@ -123,16 +123,16 @@ namespace HunterPie.Core
                 {
                     bool result;
                     result = pushAllPartHP(activeMonster);
-                    System.Diagnostics.Debug.Assert(result);
+                    Debug.Assert(result);
                     result = pushAllAilmentBuildup(activeMonster);
-                    System.Diagnostics.Debug.Assert(result);
+                    Debug.Assert(result);
                 }
                 else
                 {
                     bool result = pullAllPartHP(activeMonster);
-                    System.Diagnostics.Debug.Assert(result);
+                    Debug.Assert(result);
                     result = pullAllAilmentBuildup(activeMonster);
-                    System.Diagnostics.Debug.Assert(result);
+                    Debug.Assert(result);
                 }
 
                 Thread.Sleep(delay);
@@ -251,7 +251,7 @@ namespace HunterPie.Core
 
             if (monsterIndex >= 0 && monsterIndex <= 2)
             {
-                if (partIndex <= parts[monsterIndex].Count && partIndex >= 0)
+                if (partIndex < parts[monsterIndex].Count && partIndex >= 0)
                 {
                     string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp");
                     if (result != "false")
