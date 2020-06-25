@@ -25,7 +25,7 @@ namespace HunterPie.Core
             set
             {
                 _sessionID = HttpUtility.UrlEncode(value);
-                sessionUrlString = SessionID + PartyLeader;
+                sessionUrlString = serverUrl + "/" + SessionID + PartyLeader;
             }
         }
         private string _partyLeader = "";
@@ -35,7 +35,7 @@ namespace HunterPie.Core
             set
             {
                 _partyLeader = HttpUtility.UrlEncode(value);
-                sessionUrlString = SessionID + PartyLeader;
+                sessionUrlString = serverUrl + "/" + SessionID + PartyLeader;
             }
         }
         public bool isInParty { get; set; } = false;
