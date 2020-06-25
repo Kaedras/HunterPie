@@ -245,8 +245,11 @@ namespace HunterPie.Core {
             Id = null;
             if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
             {
-                bool result = synchandler.replaceMonster(MonsterNumber - 1);
-                System.Diagnostics.Debug.Assert(result);
+                if (synchandler.isInParty && synchandler.isPartyLeader)
+                {
+                    bool result = synchandler.replaceMonster(MonsterNumber - 1);
+                    System.Diagnostics.Debug.Assert(result);
+                }
             }
             Weaknesses?.Clear();
         }
@@ -286,8 +289,11 @@ namespace HunterPie.Core {
             Ailments.Clear();
             if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
             {
-                synchandler.clearParts(MonsterNumber - 1);
-                synchandler.clearAilments(MonsterNumber - 1);
+                if (synchandler.isInParty)
+                {
+                    synchandler.clearParts(MonsterNumber - 1);
+                    synchandler.clearAilments(MonsterNumber - 1);
+                }
             }
 #if DEBUG
             Debugger.Log($"Cleared parts: {Parts.Count} | {Ailments.Count}");
@@ -465,7 +471,6 @@ namespace HunterPie.Core {
             }
             if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
             {
-                synchandler.clearParts(MonsterNumber - 1);
                 synchandler.parts[MonsterNumber - 1] = Parts;
             }
         }
@@ -496,7 +501,7 @@ namespace HunterPie.Core {
                         sMonsterRemovablePart MonsterRemovablePartData = Scanner.Win32.Read<sMonsterRemovablePart>(CurrentPart.Address);
                         if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
                         {
-                            if (!synchandler.isHost && synchandler.hasSession)
+                            if (!synchandler.isPartyLeader && synchandler.isInParty)
                             {
                                 MonsterRemovablePartData.Data.Health = CurrentPart.Health;
                             }
@@ -522,7 +527,7 @@ namespace HunterPie.Core {
                                 CurrentPart.IsRemovable = true;
                                 if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
                                 {
-                                    if (!synchandler.isHost && synchandler.hasSession)
+                                    if (!synchandler.isPartyLeader && synchandler.isInParty)
                                     {
                                         MonsterRemovablePartData.Data.Health = CurrentPart.Health;
                                     }
@@ -548,7 +553,7 @@ namespace HunterPie.Core {
                         sMonsterPart MonsterPartData = Scanner.Win32.Read<sMonsterPart>(CurrentPart.Address);
                         if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
                         {
-                            if (!synchandler.isHost && synchandler.hasSession)
+                            if (!synchandler.isPartyLeader && synchandler.isInParty)
                             {
                                 MonsterPartData.Data.Health = CurrentPart.Health;
                             }
@@ -563,7 +568,7 @@ namespace HunterPie.Core {
 
                         if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
                         {
-                            if (!synchandler.isHost && synchandler.hasSession)
+                            if (!synchandler.isPartyLeader && synchandler.isInParty)
                             {
                                 MonsterPartData.Data.Health = CurrentPart.Health;
                             }
@@ -597,7 +602,7 @@ namespace HunterPie.Core {
                     float currentBuildup;
                     if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
                     {
-                        if (!synchandler.isHost && synchandler.hasSession)
+                        if (!synchandler.isPartyLeader && synchandler.isInParty)
                         {
                             currentBuildup = status.Buildup;
                         }

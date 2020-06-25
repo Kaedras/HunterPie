@@ -514,6 +514,15 @@ namespace HunterPie {
             {
                 ExportGameData();
                 File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Sessions.txt"), MonsterHunter.Player.SessionID);
+                if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                {
+                    if (MonsterHunter.synchandler.partyExists() && MonsterHunter.synchandler.isPartyLeader)
+                    {
+                        bool result = MonsterHunter.synchandler.deleteSession();
+                        System.Diagnostics.Debug.Assert(result);
+                    }
+                    MonsterHunter.synchandler.SessionID = MonsterHunter.Player.SessionID;
+                }
             }
         }
 

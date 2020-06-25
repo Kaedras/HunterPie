@@ -594,33 +594,7 @@ namespace HunterPie.Core
             long Address = Memory.Address.BASE + Memory.Address.SESSION_OFFSET;
             Address = Scanner.READ_MULTILEVEL_PTR(Address, Memory.Address.Offsets.SessionOffsets);
             SESSION_ADDRESS = Address;
-            string oldSessionID = SessionID;
             SessionID = Scanner.READ_STRING(SESSION_ADDRESS, 12);
-            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
-            {
-                if (synchandler.isHost)
-                {
-                    if(SessionID != oldSessionID)
-                    {
-                        synchandler.deleteSession();
-                    }
-                    bool result = synchandler.createSessionIfNotExist(SessionID + Name);
-                    System.Diagnostics.Debug.Assert(result);
-                    synchandler.hasSession = true;
-                }
-                else
-                {
-                    for (int i = 0; i < PlayerParty.Members.Count; i++)
-                    {
-                        if (PlayerParty.Members[i].IsPartyLeader)
-                        {
-                            synchandler.Session = SessionID + PlayerParty.Members[i].Name;
-                            synchandler.hasSession = synchandler.sessionExists();
-                            return;
-                        }
-                    }
-                }
-            }
         }
 
         private void GetSteamSession()
@@ -716,9 +690,20 @@ namespace HunterPie.Core
                 }
                 if (PlayerParty.Size > 0 && UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
                 {
-                    if (PlayerParty.Members[0].IsMe)
+                    if (!synchandler.isInParty && !string.IsNullOrEmpty(SessionID))
                     {
-                        synchandler.isHost = true;
+                        synchandler.PartyLeader = PlayerParty.Members[0].Name;
+                        synchandler.SessionID = SessionID;
+                        if (PlayerParty.Members[0].IsMe)
+                        {
+                            synchandler.isPartyLeader = true;
+                            bool result = synchandler.createPartyIfNotExist();
+                            System.Diagnostics.Debug.Assert(result);
+                        }
+                        else
+                        {
+                            synchandler.isPartyLeader = false;
+                        }
                     }
                 }
             }

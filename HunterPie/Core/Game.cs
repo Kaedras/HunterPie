@@ -118,6 +118,10 @@ namespace HunterPie.Core
             Player.StopScanning();
             scanGameThreading.Abort();
             IsActive = false;
+            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+            {
+                synchandler.stopSyncThread();
+            }
         }
 
         private void HookEvents() => Player.OnZoneChange += OnZoneChange;
