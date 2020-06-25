@@ -6,6 +6,7 @@ using HunterPie.Core.Monsters;
 using HunterPie.Memory;
 using HunterPie.Logger;
 using HunterPie.Core.Definitions;
+using HunterPie.GUIControls;
 
 namespace HunterPie.Core {
     public class Monster {
@@ -592,9 +593,17 @@ namespace HunterPie.Core {
 
             if (Ailments.Count > 0)
             {
+                int i = 0;
                 foreach (Ailment ailment in Ailments)
                 {
                     sMonsterAilment updatedData = Scanner.Win32.Read<sMonsterAilment>(ailment.Address);
+                    if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                    {
+                        if (!synchandler.isPartyLeader && synchandler.isInParty)
+                        {
+                            updatedData.Buildup = synchandler.ailments[MonsterNumber - 1][i++].Buildup;
+                        }
+                    }
                     ailment.SetAilmentInfo(updatedData);
                 }
 
