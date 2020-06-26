@@ -225,7 +225,7 @@ namespace HunterPie.Core
 
             if (monsterIndex >= 0 && monsterIndex <= 2 && isPartyLeader)
             {
-                if (partIndex <= parts[monsterIndex].Count && partIndex >= 0)
+                if (partIndex < parts[monsterIndex].Count && partIndex >= 0)
                 {
                     return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)parts[monsterIndex][partIndex].Health));
                 }
@@ -238,7 +238,7 @@ namespace HunterPie.Core
 
             if (monsterIndex >= 0 && monsterIndex <= 2 && isPartyLeader)
             {
-                if (ailmentIndex <= ailments[monsterIndex].Count && ailmentIndex >= 0)
+                if (ailmentIndex < ailments[monsterIndex].Count && ailmentIndex >= 0)
                 {
                     return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)ailments[monsterIndex][ailmentIndex].Buildup));
                 }
@@ -269,7 +269,7 @@ namespace HunterPie.Core
 
             if (monsterIndex >= 0 && monsterIndex <= 2)
             {
-                if (ailmentIndex <= ailments[monsterIndex].Count && ailmentIndex >= 0)
+                if (ailmentIndex < ailments[monsterIndex].Count && ailmentIndex >= 0)
                 {
                     string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup");
                     if (result != "false")

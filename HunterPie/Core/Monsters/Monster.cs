@@ -234,14 +234,6 @@ namespace HunterPie.Core {
 
         ~Monster() {
             Id = null;
-            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
-            {
-                if (synchandler.isInParty && synchandler.isPartyLeader)
-                {
-                    bool result = synchandler.replaceMonster(MonsterNumber - 1);
-                    System.Diagnostics.Debug.Assert(result);
-                }
-            }
             Weaknesses?.Clear();
         }
 
