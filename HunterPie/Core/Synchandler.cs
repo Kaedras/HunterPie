@@ -11,8 +11,8 @@ namespace HunterPie.Core
 {
     public class Synchandler
     {
-        private readonly string serverUrl = "http://" + UserSettings.PlayerConfig.HunterPie.Sync.ServerUrl;
-        private readonly int delay = UserSettings.PlayerConfig.HunterPie.Sync.Delay;
+        private string serverUrl = "http://" + UserSettings.PlayerConfig.HunterPie.Sync.ServerUrl;
+        private int delay = UserSettings.PlayerConfig.HunterPie.Sync.Delay;
         private int retries = 5;
         private Thread syncThreadReference;
         private bool stopThread = false;
@@ -114,6 +114,14 @@ namespace HunterPie.Core
             {
                 do
                 {
+                    if (stopThread)
+                    {
+                        if (isPartyLeader)
+                        {
+                            deleteSession();
+                        }
+                        return;
+                    }
                     isInParty = partyExists();
                     Thread.Sleep(1000);
                 }
