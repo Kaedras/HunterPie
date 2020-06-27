@@ -94,6 +94,20 @@ namespace HunterPie.Core
             Health = data.Health;
         }
 
+        private void UnhookEvents(MonsterPartEvents eventHandler)
+        {
+            if (eventHandler == null) return;
+            foreach (MonsterPartEvents d in eventHandler.GetInvocationList()) {
+                eventHandler -= d;
+            }
+        }
+
+        public void Destroy()
+        {
+            UnhookEvents(OnHealthChange);
+            UnhookEvents(OnBrokenCounterChange);
+        }
+
         public override string ToString()
         {
             return $"Name: {Name} | ID: {id} | HP: {Health}/{TotalHealth} | Counter: {BrokenCounter}";
