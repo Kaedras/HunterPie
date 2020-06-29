@@ -1,19 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using HunterPie.Core.Definitions;
 using HunterPie.Core.LPlayer;
+using HunterPie.Core.LPlayer.Jobs;
 using HunterPie.Logger;
 using HunterPie.Memory;
-using HunterPie.Core.LPlayer.Jobs;
-using System.Collections.Generic;
-using HunterPie.Core.Definitions;
 using Classes = HunterPie.Core.Enums.Classes;
 
 namespace HunterPie.Core
 {
     public class Player
     {
-        
+
         private long playerAddress = 0x0;
         private int level;
         private int zoneId = -1;
@@ -23,7 +23,7 @@ namespace HunterPie.Core
 
         public Synchandler synchandler;
 
-        private readonly int[] HarvestBoxZones = 
+        private readonly int[] HarvestBoxZones =
         {
             301,
             302,
@@ -35,7 +35,7 @@ namespace HunterPie.Core
             503,
             506
         };
-        private readonly int[] PeaceZones = 
+        private readonly int[] PeaceZones =
         {
             0,
             301,
@@ -85,8 +85,8 @@ namespace HunterPie.Core
         }
         public int MasterRank { get; private set; }
         public int PlayTime { get; private set; }
-        public bool IsLoggedOn { get => playerAddress != 0; }
-        
+        public bool IsLoggedOn => playerAddress != 0;
+
         public byte WeaponID
         {
             get => weaponId;
@@ -156,7 +156,7 @@ namespace HunterPie.Core
         public long SteamSession { get; private set; }
         public long SteamID { get; private set; }
 
-        Vector3 Position = new Vector3();
+        readonly Vector3 Position = new Vector3();
 
         // Party
         public Party PlayerParty = new Party();
@@ -483,7 +483,7 @@ namespace HunterPie.Core
         /*
             Player data that is tracked by the Player class, cannot be called by an external function.
         */
-        
+
         private void GetPlayerInfo()
         {
             while (Scanner.GameIsRunning)
@@ -519,32 +519,24 @@ namespace HunterPie.Core
 
         private bool GetPlayerAddress()
         {
-            long AddressValue = Scanner.READ_MULTILEVEL_PTR(Address.BASE + Address.WEAPON_OFFSET, Address.Offsets.WeaponOffsets);
-            long nextPlayer = 0x27E9F0;
-            if (AddressValue > 0x0)
+            if (ZoneID == 0)
             {
-                string pName = Scanner.READ_STRING(AddressValue - 0x270, 32);
-                int pLevel = Scanner.Read<int>(AddressValue - 0x230);
-                // If char name starts with a null char then the game haven't launched yet
-                if (pName == "") return false;
-                for (int playerSlot = 0; playerSlot < 3; playerSlot++)
-                {
-                    long pAddress = Scanner.READ_MULTILEVEL_PTR(Address.BASE + Address.LEVEL_OFFSET, Address.Offsets.LevelOffsets) + (nextPlayer * playerSlot);
-                    if (Scanner.Read<int>(pAddress) == pLevel && Scanner.READ_STRING(pAddress - 0x40, 32)?.Trim('\x00') == pName && PlayerAddress != pAddress)
-                    {
-                        LEVEL_ADDRESS = pAddress;
-                        GetPlayerLevel();
-                        GetPlayerName();
-                        PlayerAddress = pAddress;
-                        return true;
-                    }
-                }
-            }
-            else
-            {
-                PlayerAddress = 0x0;
-                LEVEL_ADDRESS = 0x0;
+                PlayerAddress = 0;
+                LEVEL_ADDRESS = 0;
                 return false;
+            }
+            long FirstSaveAddress = Scanner.READ_MULTILEVEL_PTR(Address.BASE + Address.LEVEL_OFFSET, Address.Offsets.LevelOffsets);
+            uint CurrentSaveSlot = Scanner.Read<uint>(FirstSaveAddress + 0x44);
+            long NextPlayerSave = 0x27E9F0;
+            long CurrentPlayerSaveHeader = Scanner.Read<long>(FirstSaveAddress) + NextPlayerSave * CurrentSaveSlot;
+
+            if (CurrentPlayerSaveHeader != PlayerAddress)
+            {
+                LEVEL_ADDRESS = CurrentPlayerSaveHeader + 0x90;
+                GetPlayerLevel();
+                GetPlayerMasterRank();
+                GetPlayerName();
+                PlayerAddress = CurrentPlayerSaveHeader;
             }
             return true;
         }
@@ -648,7 +640,7 @@ namespace HunterPie.Core
 
         private void GetParty()
         {
-            
+
             long address = Address.BASE + Address.PARTY_OFFSET;
             long PartyContainer = Scanner.READ_MULTILEVEL_PTR(address, Address.Offsets.PartyOffsets) - 0x22B7;
             if (InPeaceZone)
@@ -682,7 +674,7 @@ namespace HunterPie.Core
                     }
 
                     if (i == 0) PlayerParty[i].IsPartyLeader = true;
-                    
+
                     PlayerParty[i].HR = HR;
                     PlayerParty[i].MR = MR;
                     PlayerParty[i].IsMe = playerName == Name && HR == Level;
@@ -916,7 +908,7 @@ namespace HunterPie.Core
             int SafiCounter = HasSafiBuff ? Scanner.Read<int>(AbnormAddress + 0x7A8) : -1;
             long weaponAddress = Scanner.READ_MULTILEVEL_PTR(Address.BASE + Address.WEAPON_MECHANICS_OFFSET, Address.Offsets.WeaponMechanicsOffsets);
             ClassAddress = weaponAddress;
-            switch((Classes)WeaponID)
+            switch ((Classes)WeaponID)
             {
                 case Classes.Greatsword:
                     GetGreatswordInformation(weaponAddress);
