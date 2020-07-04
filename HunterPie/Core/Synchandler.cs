@@ -17,7 +17,6 @@ namespace HunterPie.Core
         private Thread syncThreadReference;
         private bool stopThread = false;
         private string sessionUrlString = "";
-
         private string _sessionID = "";
         public string SessionID
         {
@@ -28,6 +27,7 @@ namespace HunterPie.Core
                 sessionUrlString = serverUrl + "/session/" + SessionID + PartyLeader;
             }
         }
+
         private string _partyLeader = "";
         public string PartyLeader
         {
@@ -38,6 +38,7 @@ namespace HunterPie.Core
                 sessionUrlString = serverUrl + "/session/" + SessionID + PartyLeader;
             }
         }
+
         public bool isInParty { get; set; } = false;
         public bool isPartyLeader { get; set; } = false;
         public int activeMonster { get; set; } = 0;
@@ -78,7 +79,7 @@ namespace HunterPie.Core
                 }
             }
             syncThreadReference = new Thread(new ThreadStart(syncThread));
-            Thread.Sleep(200);
+            Thread.Sleep(200); //wait a bit to ensure everything else has been initialized
             syncThreadReference.Start();
         }
 
@@ -87,12 +88,20 @@ namespace HunterPie.Core
             stopThread = true;
         }
 
-        private static string get(string url)
+        private bool isMonsterIndexValid(int index) {
+            return (index >= 0 && index <= 2);
+        }
+
+        private string get(string url)
         {
             try
             {
-                Uri escapedUrl = new Uri(Uri.EscapeUriString(url));
-                WebRequest request = WebRequest.Create(escapedUrl);
+                Debug.Assert(!string.IsNullOrEmpty(url));
+                if (url != serverUrl) { //if function is not called by isServerAlive()
+                    Debug.Assert(!string.IsNullOrEmpty(_partyLeader));
+                    Debug.Assert(!string.IsNullOrEmpty(_sessionID));
+                }
+                WebRequest request = WebRequest.Create(Uri.EscapeUriString(url));
                 WebResponse response = request.GetResponse();
                 Stream stream = response.GetResponseStream();
                 StreamReader reader = new StreamReader(stream);
@@ -112,14 +121,11 @@ namespace HunterPie.Core
         {
             while (!stopThread)
             {
-                do
+                do //check if party leader has synchronisation enabled, if not check again later
                 {
-                    if (stopThread)
+                    if (stopThread) //check if thread should stop
                     {
-                        if (isPartyLeader)
-                        {
-                            deleteSession();
-                        }
+                        Debug.Assert(!isPartyLeader);
                         return;
                     }
                     isInParty = partyExists();
@@ -127,7 +133,7 @@ namespace HunterPie.Core
                 }
                 while (!isInParty);
 
-                if (isPartyLeader)
+                if (isPartyLeader) //send data to server
                 {
                     bool result;
                     result = pushAllPartHP(activeMonster);
@@ -135,7 +141,7 @@ namespace HunterPie.Core
                     result = pushAllAilmentBuildup(activeMonster);
                     Debug.Assert(result);
                 }
-                else
+                else //request data from server
                 {
                     bool result = pullAllPartHP(activeMonster);
                     Debug.Assert(result);
@@ -145,7 +151,7 @@ namespace HunterPie.Core
 
                 Thread.Sleep(delay);
             }
-            if (isPartyLeader)
+            if (isPartyLeader) //cleanup
             {
                 deleteSession();
             }
@@ -165,9 +171,8 @@ namespace HunterPie.Core
 
         public bool createPartyIfNotExist()
         {
-            if (!string.IsNullOrEmpty(SessionID) && !string.IsNullOrEmpty(PartyLeader))
+            if (!string.IsNullOrEmpty(SessionID) && !string.IsNullOrEmpty(PartyLeader) && isPartyLeader)
             {
-                sessionUrlString = serverUrl + "/session/" + SessionID + PartyLeader;
                 if (!partyExists())
                 {
                     if (get(sessionUrlString + "/create") == "true")
@@ -211,7 +216,7 @@ namespace HunterPie.Core
 
         public bool replaceMonster(int monsterIndex)
         {
-            if (monsterIndex >= 0 && monsterIndex <= 2 && isPartyLeader)
+            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
                 return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/replace"));
             }
@@ -230,12 +235,16 @@ namespace HunterPie.Core
 
         public bool pushPartHP(int monsterIndex, int partIndex)
         {
-
-            if (monsterIndex >= 0 && monsterIndex <= 2 && isPartyLeader)
+            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
                 if (partIndex < parts[monsterIndex].Count && partIndex >= 0)
                 {
-                    return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)parts[monsterIndex][partIndex].Health));
+                    float hp = parts[monsterIndex][partIndex].Health;
+                    if (float.IsNaN(hp))
+                    {
+                        hp = 0;
+                    }
+                    return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp));
                 }
             }
             return false;
@@ -243,12 +252,16 @@ namespace HunterPie.Core
 
         public bool pushAilmentBuildup(int monsterIndex, int ailmentIndex)
         {
-
-            if (monsterIndex >= 0 && monsterIndex <= 2 && isPartyLeader)
+            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
                 if (ailmentIndex < ailments[monsterIndex].Count && ailmentIndex >= 0)
                 {
-                    return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)ailments[monsterIndex][ailmentIndex].Buildup));
+                    float buildup = ailments[monsterIndex][ailmentIndex].Buildup;
+                    if (float.IsNaN(buildup))
+                    {
+                        buildup = 0;
+                    }
+                    return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup));
                 }
             }
             return false;
@@ -256,8 +269,7 @@ namespace HunterPie.Core
 
         public bool pullPartHP(int monsterIndex, int partIndex)
         {
-
-            if (monsterIndex >= 0 && monsterIndex <= 2)
+            if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
             {
                 if (partIndex < parts[monsterIndex].Count && partIndex >= 0)
                 {
@@ -274,8 +286,7 @@ namespace HunterPie.Core
 
         public bool pullAilmentBuildup(int monsterIndex, int ailmentIndex)
         {
-
-            if (monsterIndex >= 0 && monsterIndex <= 2)
+            if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
             {
                 if (ailmentIndex < ailments[monsterIndex].Count && ailmentIndex >= 0)
                 {
@@ -292,8 +303,7 @@ namespace HunterPie.Core
 
         public bool pushAllPartHP(int monsterIndex)
         {
-
-            if (monsterIndex >= 0 && monsterIndex <= 2 && isPartyLeader)
+            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
                 for (int i = 0; i < parts[monsterIndex].Count; i++)
                 {
@@ -312,8 +322,7 @@ namespace HunterPie.Core
 
         private bool pushAllAilmentBuildup(int monsterIndex)
         {
-
-            if (monsterIndex >= 0 && monsterIndex <= 2 && isPartyLeader)
+            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
                 for (int i = 0; i < ailments[monsterIndex].Count; i++)
                 {
@@ -332,8 +341,7 @@ namespace HunterPie.Core
 
         private bool pullAllPartHP(int monsterIndex)
         {
-
-            if (monsterIndex >= 0 && monsterIndex <= 2)
+            if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
             {
                 for (int i = 0; i < parts[monsterIndex].Count; i++)
                 {
@@ -352,8 +360,7 @@ namespace HunterPie.Core
 
         private bool pullAllAilmentBuildup(int monsterIndex)
         {
-
-            if (monsterIndex >= 0 && monsterIndex <= 2)
+            if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
             {
                 for (int i = 0; i < ailments[monsterIndex].Count; i++)
                 {

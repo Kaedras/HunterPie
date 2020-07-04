@@ -294,14 +294,6 @@ namespace HunterPie.Core
                 monsterAilment.Destroy();
             }
             Ailments.Clear();
-            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
-            {
-                if (synchandler.isInParty && synchandler.isPartyLeader)
-                {
-                    synchandler.clearParts(MonsterNumber - 1);
-                    synchandler.clearAilments(MonsterNumber - 1);
-                }
-            }
         }
 
         private void GetMonsterAddress()

@@ -700,21 +700,24 @@ namespace HunterPie.Core
                     PlayerParty[i].IsMe = playerName == Name && HR == Level;
                     PlayerParty[i].SetPlayerInfo(playerName, playerWeapon, playerDamage, playerDamagePercentage);
                 }
-                if (PlayerParty.Size > 0 && UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
+                if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
                 {
+                    System.Diagnostics.Debug.Assert(PlayerParty.Size > 0);
                     if (!synchandler.isInParty && !string.IsNullOrEmpty(SessionID))
                     {
-                        synchandler.PartyLeader = PlayerParty.Members[0].Name;
                         synchandler.SessionID = SessionID;
-                        if (PlayerParty.Members[0].IsMe)
+                        for (int i = 0; i < PlayerParty.Size; i++)
                         {
-                            synchandler.isPartyLeader = true;
-                            bool result = synchandler.createPartyIfNotExist();
-                            System.Diagnostics.Debug.Assert(result);
-                        }
-                        else
-                        {
-                            synchandler.isPartyLeader = false;
+                            if (PlayerParty.Members[i].IsPartyLeader)
+                            {
+                                synchandler.PartyLeader = PlayerParty.Members[i].Name;
+                                synchandler.isPartyLeader = PlayerParty.Members[i].IsMe;
+                                if (PlayerParty.Members[i].IsMe)
+                                {
+                                    bool result = synchandler.createPartyIfNotExist();
+                                    System.Diagnostics.Debug.Assert(result);
+                                }
+                            }
                         }
                     }
                 }
