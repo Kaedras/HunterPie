@@ -133,6 +133,7 @@ namespace HunterPie.Core
             if (Player.InPeaceZone) Time = null;
             else { Time = DateTime.UtcNow; }
 
+            synchandler.deleteSession();
         }
 
         private void StartGameScanner()
