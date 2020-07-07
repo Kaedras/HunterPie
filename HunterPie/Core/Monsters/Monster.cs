@@ -212,7 +212,10 @@ namespace HunterPie.Core
         protected virtual void _onMonsterDespawn() {
             if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
             {
-                synchandler.replaceMonster(MonsterNumber - 1);
+                if (synchandler.isPartyLeader && synchandler.isInParty)
+                {
+                    synchandler.replaceMonster(MonsterNumber - 1);
+                }
             }
             OnMonsterDespawn?.Invoke(this, EventArgs.Empty);
         }
