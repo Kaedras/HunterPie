@@ -18,6 +18,7 @@ namespace HunterPie.Core
         private bool stopThread = false;
         private string sessionUrlString = "";
         private string _sessionID = "";
+
         public string SessionID
         {
             get => _sessionID;
@@ -29,6 +30,7 @@ namespace HunterPie.Core
         }
 
         private string _partyLeader = "";
+
         public string PartyLeader
         {
             get => _partyLeader;
@@ -88,7 +90,8 @@ namespace HunterPie.Core
             stopThread = true;
         }
 
-        private bool isMonsterIndexValid(int index) {
+        private bool isMonsterIndexValid(int index)
+        {
             return (index >= 0 && index <= 2);
         }
 
@@ -97,7 +100,8 @@ namespace HunterPie.Core
             try
             {
                 Debug.Assert(!string.IsNullOrEmpty(url));
-                if (url != serverUrl) { //if function is not called by isServerAlive()
+                if (url != serverUrl)
+                { //if function is not called by isServerAlive()
                     Debug.Assert(!string.IsNullOrEmpty(_partyLeader));
                     Debug.Assert(!string.IsNullOrEmpty(_sessionID));
                 }
@@ -125,28 +129,33 @@ namespace HunterPie.Core
                 {
                     if (stopThread) //check if thread should stop
                     {
-                        Debug.Assert(!isPartyLeader);
                         return;
                     }
-                    isInParty = partyExists();
                     Thread.Sleep(1000);
+                    isInParty = partyExists();
                 }
                 while (!isInParty);
 
                 if (isPartyLeader) //send data to server
                 {
-                    bool result;
-                    result = pushAllPartHP(activeMonster);
-                    Debug.Assert(result);
-                    result = pushAllAilmentBuildup(activeMonster);
-                    Debug.Assert(result);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        bool result;
+                        result = pushAllPartHP(i);
+                        Debug.Assert(result);
+                        result = pushAllAilmentBuildup(i);
+                        Debug.Assert(result);
+                    }
                 }
                 else //request data from server
                 {
-                    bool result = pullAllPartHP(activeMonster);
-                    Debug.Assert(result);
-                    result = pullAllAilmentBuildup(activeMonster);
-                    Debug.Assert(result);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        bool result = pullAllPartHP(i);
+                        Debug.Assert(result);
+                        result = pullAllAilmentBuildup(i);
+                        Debug.Assert(result);
+                    }
                 }
 
                 Thread.Sleep(delay);
@@ -202,23 +211,39 @@ namespace HunterPie.Core
 
         public bool deleteSession()
         {
+            Debug.Assert(partyExists());
+            Debug.Assert(isPartyLeader);
+
             if (partyExists() && isPartyLeader)
             {
-                if (get(sessionUrlString + "/delete") == "true")
+                string result = get(sessionUrlString + "/delete");
+                if (result == "true")
                 {
                     SessionID = "";
                     PartyLeader = "";
                     return true;
                 }
+                Debugger.Error("error in Synchandler.deleteSession(), message: " + result);
             }
             return false;
         }
 
         public bool replaceMonster(int monsterIndex)
         {
+            Debug.Assert(isMonsterIndexValid(monsterIndex));
+            Debug.Assert(isPartyLeader);
+
             if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
-                return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/replace"));
+                string result = get(sessionUrlString + "/monster/" + monsterIndex + "/replace");
+                try
+                {
+                    return bool.Parse(result);
+                }
+                catch (Exception e)
+                {
+                    Debugger.Error("error in Synchandler.replaceMonster(" + monsterIndex + "), message: " + e.Message);
+                }
             }
             return false;
         }
@@ -235,6 +260,11 @@ namespace HunterPie.Core
 
         public bool pushPartHP(int monsterIndex, int partIndex)
         {
+            Debug.Assert(isMonsterIndexValid(monsterIndex));
+            Debug.Assert(isPartyLeader);
+            Debug.Assert(partIndex < parts[monsterIndex].Count);
+            Debug.Assert(partIndex >= 0);
+
             if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
                 if (partIndex < parts[monsterIndex].Count && partIndex >= 0)
@@ -244,7 +274,15 @@ namespace HunterPie.Core
                     {
                         hp = 0;
                     }
-                    return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp));
+                    string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp);
+                    try
+                    {
+                        return bool.Parse(result);
+                    }
+                    catch (Exception e)
+                    {
+                        Debugger.Error("error in Synchandler.pushPartHP(" + monsterIndex + ", " + partIndex + "), message: " + e.Message);
+                    }
                 }
             }
             return false;
@@ -252,6 +290,11 @@ namespace HunterPie.Core
 
         public bool pushAilmentBuildup(int monsterIndex, int ailmentIndex)
         {
+            Debug.Assert(isMonsterIndexValid(monsterIndex));
+            Debug.Assert(isPartyLeader);
+            Debug.Assert(ailmentIndex < ailments[monsterIndex].Count);
+            Debug.Assert(ailmentIndex >= 0);
+
             if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
                 if (ailmentIndex < ailments[monsterIndex].Count && ailmentIndex >= 0)
@@ -261,7 +304,15 @@ namespace HunterPie.Core
                     {
                         buildup = 0;
                     }
-                    return bool.Parse(get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup));
+                    try
+                    {
+                        string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
+                        return bool.Parse(result);
+                    }
+                    catch (Exception e)
+                    {
+                        Debugger.Error("error in Synchandler.pushAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "), message: " + e.Message);
+                    }
                 }
             }
             return false;
@@ -269,15 +320,27 @@ namespace HunterPie.Core
 
         public bool pullPartHP(int monsterIndex, int partIndex)
         {
+            Debug.Assert(isMonsterIndexValid(monsterIndex));
+            Debug.Assert(!isPartyLeader);
+            Debug.Assert(partIndex < parts[monsterIndex].Count);
+            Debug.Assert(partIndex >= 0);
+
             if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
             {
                 if (partIndex < parts[monsterIndex].Count && partIndex >= 0)
                 {
                     string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp");
-                    if (result != "false")
+                    //if (result != "false")
                     {
-                        parts[monsterIndex][partIndex].Health = int.Parse(result);
-                        return true;
+                        try
+                        {
+                            parts[monsterIndex][partIndex].Health = int.Parse(result);
+                            return true;
+                        }
+                        catch (Exception e)
+                        {
+                            Debugger.Error("Exception occured in Synchandler.pullPartHP(" + monsterIndex + ", " + partIndex + "), message: " + e.Message);
+                        }
                     }
                 }
             }
@@ -286,15 +349,27 @@ namespace HunterPie.Core
 
         public bool pullAilmentBuildup(int monsterIndex, int ailmentIndex)
         {
+            Debug.Assert(isMonsterIndexValid(monsterIndex));
+            Debug.Assert(!isPartyLeader);
+            Debug.Assert(ailmentIndex < ailments[monsterIndex].Count);
+            Debug.Assert(ailmentIndex >= 0);
+
             if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
             {
                 if (ailmentIndex < ailments[monsterIndex].Count && ailmentIndex >= 0)
                 {
                     string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup");
-                    if (result != "false")
+                    //if (result != "false")
                     {
-                        ailments[monsterIndex][ailmentIndex].Buildup = int.Parse(result);
-                        return true;
+                        try
+                        {
+                            ailments[monsterIndex][ailmentIndex].Buildup = int.Parse(result);//todo: check if monster has been captured
+                            return true;
+                        }
+                        catch (Exception e)
+                        {
+                            Debugger.Error("Exception occured in Synchandler.pullAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "), message: " + e.Message);
+                        }
                     }
                 }
             }
@@ -303,6 +378,9 @@ namespace HunterPie.Core
 
         public bool pushAllPartHP(int monsterIndex)
         {
+            Debug.Assert(isMonsterIndexValid(monsterIndex));
+            Debug.Assert(isPartyLeader);
+
             if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
                 for (int i = 0; i < parts[monsterIndex].Count; i++)
@@ -322,6 +400,9 @@ namespace HunterPie.Core
 
         private bool pushAllAilmentBuildup(int monsterIndex)
         {
+            Debug.Assert(isMonsterIndexValid(monsterIndex));
+            Debug.Assert(isPartyLeader);
+
             if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
             {
                 for (int i = 0; i < ailments[monsterIndex].Count; i++)
@@ -341,6 +422,9 @@ namespace HunterPie.Core
 
         private bool pullAllPartHP(int monsterIndex)
         {
+            Debug.Assert(isMonsterIndexValid(monsterIndex));
+            Debug.Assert(!isPartyLeader);
+
             if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
             {
                 for (int i = 0; i < parts[monsterIndex].Count; i++)
@@ -360,6 +444,9 @@ namespace HunterPie.Core
 
         private bool pullAllAilmentBuildup(int monsterIndex)
         {
+            Debug.Assert(isMonsterIndexValid(monsterIndex));
+            Debug.Assert(!isPartyLeader);
+
             if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
             {
                 for (int i = 0; i < ailments[monsterIndex].Count; i++)
