@@ -281,7 +281,7 @@ namespace HunterPie.Core
                     }
                     catch (Exception e)
                     {
-                        Debugger.Error("error in Synchandler.pushPartHP(" + monsterIndex + ", " + partIndex + "), message: " + e.Message);
+                        Debugger.Error("error in Synchandler.pushPartHP(" + monsterIndex + ", " + partIndex + "), message: " + e.Message + "\nresult: " + result);
                     }
                 }
             }
@@ -304,14 +304,14 @@ namespace HunterPie.Core
                     {
                         buildup = 0;
                     }
+                    string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
                     try
                     {
-                        string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
                         return bool.Parse(result);
                     }
                     catch (Exception e)
                     {
-                        Debugger.Error("error in Synchandler.pushAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "), message: " + e.Message);
+                        Debugger.Error("error in Synchandler.pushAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "), message: " + e.Message + "\nresult: " + result);
                     }
                 }
             }
