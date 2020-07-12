@@ -707,6 +707,12 @@ namespace HunterPie.Core
                 }
                 if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
                 {
+                    if (PlayerParty.Size == 0 && zoneId == 504) //player is in training area
+                    {
+                        synchandler.isInParty = false;
+                        synchandler.isPartyLeader = false;
+                        return;
+                    }
                     System.Diagnostics.Debug.Assert(PlayerParty.Size > 0);
                     if (!synchandler.isInParty && !string.IsNullOrEmpty(SessionID))
                     {
