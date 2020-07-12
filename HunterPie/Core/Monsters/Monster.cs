@@ -528,6 +528,13 @@ namespace HunterPie.Core
                                 MonsterRemovablePartData.Data.Health = CurrentPart.Health;
                             }
                         }
+
+                        // Alatreon explosion level
+                        if (GameId == 87 && MonsterRemovablePartData.unk3.Index == 3)
+                        {
+                            MonsterRemovablePartData.Data.Counter = Scanner.Read<int>(MonsterAddress + 0x20920);
+                        }
+
                         CurrentPart.SetPartInfo(MonsterRemovablePartData.Data);
                     }
                     else
