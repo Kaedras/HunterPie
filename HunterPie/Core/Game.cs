@@ -88,7 +88,7 @@ namespace HunterPie.Core
             ThirdMonster = null;
             if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
             {
-                synchandler.stopSyncThread();
+                synchandler = null;
             }
         }
 
