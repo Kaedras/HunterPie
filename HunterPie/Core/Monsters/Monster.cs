@@ -7,6 +7,7 @@ using HunterPie.Core.Enums;
 using HunterPie.Core.Monsters;
 using HunterPie.Logger;
 using HunterPie.Memory;
+using Newtonsoft.Json;
 
 namespace HunterPie.Core
 {
