@@ -12,7 +12,14 @@ namespace HunterPie.Core
     public class Synchandler
     {
         private string serverUrl = "http://" + UserSettings.PlayerConfig.HunterPie.Sync.ServerUrl;
-        private int delay = UserSettings.PlayerConfig.HunterPie.Sync.Delay;
+
+        private int delay
+        {
+            get
+            {
+                return UserSettings.PlayerConfig.HunterPie.Sync.Delay;
+            }
+        }
         private int retries = 5;
         private Thread syncThreadReference;
         private bool stopThread = false;
@@ -67,18 +74,10 @@ namespace HunterPie.Core
 
         public void startSyncThread()
         {
-            while (!isServerAlive())
+            if(serverUrl == "http://")
             {
-                Debugger.Error("Could not reach server, " + retries + " retries remaining.");
-                if (retries-- > 0)
-                {
-                    Thread.Sleep(1000);
-                }
-                else
-                {
-                    Debugger.Error("Giving up on trying to reach server.");
-                    return;
-                }
+                Debugger.Error("Sync server url is empty");
+                return;
             }
             syncThreadReference = new Thread(new ThreadStart(syncThread));
             Thread.Sleep(200); //wait a bit to ensure everything else has been initialized
@@ -123,6 +122,19 @@ namespace HunterPie.Core
 
         private void syncThread()
         {
+            while (!isServerAlive() && !stopThread)
+            {
+                Debugger.Error("Could not reach server, " + retries + " retries remaining.");
+                if (retries-- > 0)
+                {
+                    Thread.Sleep(500);
+                }
+                else
+                {
+                    Debugger.Error("Giving up on trying to reach server.");
+                    return;
+                }
+            }
             while (!stopThread)
             {
                 do //check if party leader has synchronisation enabled, if not check again later

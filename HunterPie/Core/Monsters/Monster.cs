@@ -238,7 +238,8 @@ namespace HunterPie.Core
             {
                 if (synchandler.isPartyLeader && synchandler.isInParty)
                 {
-                    synchandler.replaceMonster(MonsterNumber - 1);
+                    bool result = synchandler.replaceMonster(MonsterNumber - 1);
+                    System.Diagnostics.Debug.Assert(result);
                 }
             }
             OnMonsterDespawn?.Invoke(this, EventArgs.Empty);

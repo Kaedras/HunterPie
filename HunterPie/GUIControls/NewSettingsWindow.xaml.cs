@@ -185,5 +185,10 @@ namespace HunterPie.GUIControls
         private void SwitchEnableParts_MouseDown(object sender, MouseButtonEventArgs e) => PartsCustomizer.IsEnabled = switchEnableParts.IsEnabled;
 
         private void SwitchEnableAilments_MouseDown(object sender, MouseButtonEventArgs e) => AilmentsCustomizer.IsEnabled = switchEnableAilments.IsEnabled;
+
+        private void SyncDelay_ValueChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+        {
+            UserSettings.PlayerConfig.HunterPie.Sync.Delay = (int)SyncDelay.Value;
+        }
     }
 }
