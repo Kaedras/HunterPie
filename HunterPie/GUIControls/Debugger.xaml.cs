@@ -57,6 +57,8 @@ namespace HunterPie.Logger
 
         public static void Update(object message) => PrintOnConsole($"[UPDATE] {message?.ToString()}", NORMAL);
 
+        public static void Benchmark(object message) => PrintOnConsole(message?.ToString(), WARN);
+
         public static void Debug(object message)
         {
             if (!UserSettings.PlayerConfig.HunterPie.Debug.ShowDebugMessages) return;
@@ -78,6 +80,7 @@ namespace HunterPie.Logger
         {
             DateTime TimeStamp = DateTime.Now;
             message = $"[{TimeStamp.ToLongTimeString()}] {message}\n";
+            
             LastOperation = _Instance.Dispatcher.BeginInvoke(
                 priority,
                 new Action(() =>
