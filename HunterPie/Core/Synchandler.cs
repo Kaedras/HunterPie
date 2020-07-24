@@ -74,9 +74,9 @@ namespace HunterPie.Core
 
         public void startSyncThread()
         {
-            if(serverUrl == "http://")
+            if (serverUrl == "http://")
             {
-                Debugger.Error("Sync server url is empty");
+                Debugger.Error("[Sync] Sync server url is empty");
                 return;
             }
             syncThreadReference = new Thread(new ThreadStart(syncThread));
@@ -115,39 +115,57 @@ namespace HunterPie.Core
             }
             catch (Exception e)
             {
-                Debugger.Error("Exception occured in Synchandler.get(" + url + "), message: " + e.Message);
+                Debugger.Error("[Sync] Exception occured in Synchandler.get(" + url + "): " + e.Message);
                 return "false";
             }
         }
 
         private void syncThread()
         {
-            while (!isServerAlive() && !stopThread)
+            bool msgShown = false;
+            //check if server can be reached
+            while (!isServerAlive())
             {
-                Debugger.Error("Could not reach server, " + retries + " retries remaining.");
+                if (stopThread)
+                {
+                    return;
+                }
+                Debugger.Error("[Sync] Could not reach server, " + retries + " retries remaining");
                 if (retries-- > 0)
                 {
                     Thread.Sleep(500);
                 }
                 else
                 {
-                    Debugger.Error("Giving up on trying to reach server.");
+                    Debugger.Error("[Sync] Giving up on trying to reach server");
                     return;
                 }
             }
+
+            Debugger.Log("[Sync] Connected to " + serverUrl);
             while (!stopThread)
             {
-                do //check if party leader has synchronisation enabled, if not check again later
+                //check if party leader has synchronisation enabled
+                do
                 {
                     if (stopThread) //check if thread should stop
                     {
                         return;
                     }
-                    Thread.Sleep(1000);
                     isInParty = partyExists();
+                    if (!isInParty) //only sleep if loop is active to prevent unnecessary delays
+                    {
+                        Thread.Sleep(1000);
+                    }
                 }
                 while (!isInParty);
 
+                //party leader has synchronisation enabled
+                if (!msgShown)
+                {
+                    Debugger.Log("[Sync] Entered session");
+                    msgShown = true;
+                }
                 if (isPartyLeader) //send data to server
                 {
                     for (int i = 0; i < 3; i++)
@@ -176,6 +194,8 @@ namespace HunterPie.Core
             {
                 deleteSession();
             }
+            isInParty = false;
+            Debugger.Log("[Sync] Left session");
         }
 
         public bool isServerAlive()
@@ -235,7 +255,7 @@ namespace HunterPie.Core
                     PartyLeader = "";
                     return true;
                 }
-                Debugger.Error("error in Synchandler.deleteSession(), message: " + result);
+                Debugger.Error("[Sync] Error in Synchandler.deleteSession(): " + result);
             }
             return false;
         }
@@ -254,7 +274,7 @@ namespace HunterPie.Core
                 }
                 catch (Exception e)
                 {
-                    Debugger.Error("error in Synchandler.replaceMonster(" + monsterIndex + "), message: " + e.Message);
+                    Debugger.Error("[Sync] Error in Synchandler.replaceMonster(" + monsterIndex + "): " + e.Message);
                 }
             }
             return false;
@@ -293,7 +313,7 @@ namespace HunterPie.Core
                     }
                     catch (Exception e)
                     {
-                        Debugger.Error("error in Synchandler.pushPartHP(" + monsterIndex + ", " + partIndex + "), message: " + e.Message + "\nresult: " + result);
+                        Debugger.Error("[Sync] Error in Synchandler.pushPartHP(" + monsterIndex + ", " + partIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
                     }
                 }
             }
@@ -323,7 +343,7 @@ namespace HunterPie.Core
                     }
                     catch (Exception e)
                     {
-                        Debugger.Error("error in Synchandler.pushAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "), message: " + e.Message + "\nresult: " + result);
+                        Debugger.Error("[Sync] Error in Synchandler.pushAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
                     }
                 }
             }
@@ -351,7 +371,7 @@ namespace HunterPie.Core
                         }
                         catch (Exception e)
                         {
-                            Debugger.Error("Exception occured in Synchandler.pullPartHP(" + monsterIndex + ", " + partIndex + "), message: " + e.Message);
+                            Debugger.Error("[Sync] Exception occured in Synchandler.pullPartHP(" + monsterIndex + ", " + partIndex + "): " + e.Message);
                         }
                     }
                 }
@@ -380,7 +400,7 @@ namespace HunterPie.Core
                         }
                         catch (Exception e)
                         {
-                            Debugger.Error("Exception occured in Synchandler.pullAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "), message: " + e.Message);
+                            Debugger.Error("[Sync] Exception occured in Synchandler.pullAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "): " + e.Message);
                         }
                     }
                 }
