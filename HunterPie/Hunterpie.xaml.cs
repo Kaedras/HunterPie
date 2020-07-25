@@ -6,7 +6,6 @@ using System.Linq;
 using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms.Integration;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Markup;
@@ -919,7 +918,6 @@ namespace HunterPie
 
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
-            e.Handled = true;
 
             Key key = (e.Key == Key.System ? e.SystemKey : e.Key);
 
