@@ -274,7 +274,7 @@ namespace HunterPie.Core
                 }
                 catch (Exception e)
                 {
-                    Debugger.Error("[Sync] Error in Synchandler.replaceMonster(" + monsterIndex + "): " + e.Message);
+                    Debugger.Error("[Sync] Error in Synchandler.replaceMonster(" + monsterIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
                 }
             }
             return false;
@@ -371,7 +371,7 @@ namespace HunterPie.Core
                         }
                         catch (Exception e)
                         {
-                            Debugger.Error("[Sync] Exception occured in Synchandler.pullPartHP(" + monsterIndex + ", " + partIndex + "): " + e.Message);
+                            Debugger.Error("[Sync] Exception occured in Synchandler.pullPartHP(" + monsterIndex + ", " + partIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
                         }
                     }
                 }
@@ -400,7 +400,7 @@ namespace HunterPie.Core
                         }
                         catch (Exception e)
                         {
-                            Debugger.Error("[Sync] Exception occured in Synchandler.pullAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "): " + e.Message);
+                            Debugger.Error("[Sync] Exception occured in Synchandler.pullAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
                         }
                     }
                 }
