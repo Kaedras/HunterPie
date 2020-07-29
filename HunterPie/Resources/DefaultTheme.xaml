@@ -64,6 +64,17 @@
         <Setter Property="Margin" Value="33,0,0,0"/>
     </Style>
 
+    <Style x:Key="OVERLAY_MONSTER_PARTS_DISPLAY" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+
+    <Style x:Key="OVERLAY_MONSTER_WEAKNESS_DISPLAY" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Margin" Value="46,40,37,0"/>
+        <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+    
     <Style x:Key="OVERLAY_MONSTER_NAME_TEXT_STYLE" TargetType="TextBlock">
         <Setter Property="Foreground">
             <Setter.Value>
@@ -73,7 +84,7 @@
                 </LinearGradientBrush>
             </Setter.Value>
         </Setter>
-        <Setter Property="FontFamily" Value="Roboto"/>
+        <Setter Property="FontFamily" Value="Roboto, Yu Gothic"/>
         <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="FontSize" Value="14"/>
     </Style>
@@ -113,7 +124,7 @@
 
     <Style x:Key="OVERLAY_MONSTER_BAR_TEXT_STYLE" TargetType="TextBlock">
         <Setter Property="Foreground" Value="#eee6ff"/>
-        <Setter Property="FontFamily" Value="Roboto"/>
+        <Setter Property="FontFamily" Value="Roboto, Yu Gothic"/>
         <Setter Property="TextAlignment" Value="Center"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="FontWeight" Value="Medium"/>
@@ -151,7 +162,7 @@
     
     <!-- Monster Ailment Styles -->
     <Style x:Key="OVERLAY_MONSTER_AILMENT_NAME_TEXT_STYLE" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Roboto"/>
+        <Setter Property="FontFamily" Value="Roboto, Yu Gothic"/>
         <Setter Property="Height" Value="19"/>
         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         <Setter Property="VerticalAlignment" Value="Top"/>
@@ -168,7 +179,7 @@
         <Setter Property="FontSize" Value="13"/>
     </Style>
     <Style x:Key="OVERLAY_MONSTER_AILMENT_HEALTH_TEXT_STYLE" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Roboto"/>
+        <Setter Property="FontFamily" Value="Roboto, Yu Gothic"/>
         <Setter Property="Height" Value="15"/>
         <Setter Property="FontSize" Value="11"/>
         <Setter Property="TextAlignment" Value="Center"/>
@@ -257,8 +268,8 @@
     </Style>
     <Style x:Key="OVERLAY_MONSTER_TENDERIZE_BAR_STYLE" TargetType="Custom:MinimalHealthBar">
         <Setter Property="Background" Value="#4C000000"/>
-        <Setter Property="Color" Value="#FFBBFFF6"/>
-        <Setter Property="Margin" Value="32,16,5,0"/>
+        <Setter Property="Color" Value="#80b5ff"/>
+        <Setter Property="Margin" Value="32,17,5,0"/>
         <Setter Property="Height" Value="2"/>
         <Setter Property="RenderTransform">
             <Setter.Value>
@@ -272,7 +283,7 @@
         </Setter>
     </Style>
     <Style x:Key="OVERLAY_MONSTER_PART_NAME_TEXT_STYLE" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Roboto"/>
+        <Setter Property="FontFamily" Value="Roboto, Yu Gothic"/>
         <Setter Property="Height" Value="22"/>
         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         <Setter Property="VerticalAlignment" Value="Top"/>
@@ -289,7 +300,7 @@
         <Setter Property="FontSize" Value="13"/>
     </Style>
     <Style x:Key="OVERLAY_MONSTER_PART_HEALTH_TEXT_STYLE" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Roboto"/>
+        <Setter Property="FontFamily" Value="Roboto, Yu Gothic"/>
         <Setter Property="Height" Value="12"/>
         <Setter Property="FontSize" Value="11"/>
         <Setter Property="TextAlignment" Value="Center"/>
