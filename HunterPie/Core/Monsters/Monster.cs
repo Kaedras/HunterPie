@@ -238,8 +238,7 @@ namespace HunterPie.Core
             {
                 if (synchandler.isPartyLeader && synchandler.isInParty)
                 {
-                    bool result = synchandler.replaceMonster(MonsterNumber - 1);
-                    System.Diagnostics.Debug.Assert(result);
+                    synchandler.removeMonster(MonsterNumber - 1);
                 }
             }
             OnMonsterDespawn?.Invoke(this, EventArgs.Empty);
@@ -249,13 +248,7 @@ namespace HunterPie.Core
 
         protected virtual void _onHPUpdate() => OnHPUpdate?.Invoke(this, new MonsterUpdateEventArgs(this));
 
-        protected virtual void _onTargetted() {
-            OnTargetted?.Invoke(this, EventArgs.Empty);
-            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled && isTarget)
-            {
-                synchandler.activeMonster = MonsterNumber - 1;
-            }
-        }
+        protected virtual void _onTargetted() => OnTargetted?.Invoke(this, EventArgs.Empty);
 
         protected virtual void _onCrownChange() => OnCrownChange?.Invoke(this, EventArgs.Empty);
 

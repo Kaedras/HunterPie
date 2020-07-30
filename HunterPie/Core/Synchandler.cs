@@ -20,6 +20,7 @@ namespace HunterPie.Core
                 return UserSettings.PlayerConfig.HunterPie.Sync.Delay;
             }
         }
+
         private int retries = 5;
         private Thread syncThreadReference;
         private bool stopThread = false;
@@ -50,7 +51,6 @@ namespace HunterPie.Core
 
         public bool isInParty { get; set; } = false;
         public bool isPartyLeader { get; set; } = false;
-        public int activeMonster { get; set; } = 0;
         public List<List<Part>> parts { get; set; } = new List<List<Part>>(3);
         public List<List<Ailment>> ailments { get; set; } = new List<List<Ailment>>(3);
 
@@ -66,10 +66,6 @@ namespace HunterPie.Core
         ~Synchandler()
         {
             stopSyncThread();
-            if (isPartyLeader)
-            {
-                deleteSession();
-            }
         }
 
         public void startSyncThread()
@@ -80,18 +76,12 @@ namespace HunterPie.Core
                 return;
             }
             syncThreadReference = new Thread(new ThreadStart(syncThread));
-            Thread.Sleep(200); //wait a bit to ensure everything else has been initialized
             syncThreadReference.Start();
         }
 
         public void stopSyncThread()
         {
             stopThread = true;
-        }
-
-        private bool isMonsterIndexValid(int index)
-        {
-            return (index >= 0 && index <= 2);
         }
 
         private string get(string url)
@@ -101,8 +91,8 @@ namespace HunterPie.Core
                 Debug.Assert(!string.IsNullOrEmpty(url));
                 if (url != serverUrl)
                 { //if function is not called by isServerAlive()
-                    Debug.Assert(!string.IsNullOrEmpty(_partyLeader));
-                    Debug.Assert(!string.IsNullOrEmpty(_sessionID));
+                    Debug.Assert(!string.IsNullOrEmpty(PartyLeader));
+                    Debug.Assert(!string.IsNullOrEmpty(SessionID));
                 }
                 WebRequest request = WebRequest.Create(Uri.EscapeUriString(url));
                 WebResponse response = request.GetResponse();
@@ -115,18 +105,17 @@ namespace HunterPie.Core
             }
             catch (Exception e)
             {
-                Debugger.Error("[Sync] Exception occured in Synchandler.get(" + url + "): " + e.Message);
+                Debugger.Error("[Sync] Exception occured in get(" + url + "): " + e.Message);
                 return "false";
             }
         }
 
         private void syncThread()
         {
-            bool msgShown = false;
             //check if server can be reached
             while (!isServerAlive())
             {
-                if (stopThread)
+                if (stopThread) //check if thread should stop
                 {
                     return;
                 }
@@ -142,23 +131,27 @@ namespace HunterPie.Core
                 }
             }
 
-            Debugger.Log("[Sync] Connected to " + serverUrl);
+            Debugger.Log("[Sync] Connected to server " + serverUrl);
+
+            bool msgShown = false;
+
             while (!stopThread)
             {
-                //check if party leader has synchronisation enabled
-                do
+                //check if party leader has synchronisation enabled, if not continuously check if anything has changed
+                isInParty = partyExists();
+                if (!isInParty)
+                {
+                    msgShown = false;
+                }
+                while (!isInParty)
                 {
                     if (stopThread) //check if thread should stop
                     {
                         return;
                     }
                     isInParty = partyExists();
-                    if (!isInParty) //only sleep if loop is active to prevent unnecessary delays
-                    {
-                        Thread.Sleep(1000);
-                    }
+                    Thread.Sleep(1000);
                 }
-                while (!isInParty);
 
                 //party leader has synchronisation enabled
                 if (!msgShown)
@@ -168,332 +161,219 @@ namespace HunterPie.Core
                 }
                 if (isPartyLeader) //send data to server
                 {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        bool result;
-                        result = pushAllPartHP(i);
-                        Debug.Assert(result);
-                        result = pushAllAilmentBuildup(i);
-                        Debug.Assert(result);
-                    }
+                    pushAllPartHP();
+                    pushAllAilmentBuildup();
                 }
                 else //request data from server
                 {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        bool result = pullAllPartHP(i);
-                        Debug.Assert(result);
-                        result = pullAllAilmentBuildup(i);
-                        Debug.Assert(result);
-                    }
+                    pullAllPartHP();
+                    pullAllAilmentBuildup();
                 }
-
                 Thread.Sleep(delay);
             }
-            if (isPartyLeader) //cleanup
-            {
-                deleteSession();
-            }
-            isInParty = false;
-            Debugger.Log("[Sync] Left session");
+
+            quitSession();
         }
 
         public bool isServerAlive()
         {
-            if (!string.IsNullOrEmpty(serverUrl))
+            if (get(serverUrl) == "its alive")
             {
-                if (get(serverUrl) == "its alive")
-                {
-                    return true;
-                }
+                return true;
             }
             return false;
         }
 
         public bool createPartyIfNotExist()
         {
-            if (!string.IsNullOrEmpty(SessionID) && !string.IsNullOrEmpty(PartyLeader) && isPartyLeader)
+            if (partyExists())
             {
-                if (!partyExists())
-                {
-                    if (get(sessionUrlString + "/create") == "true")
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    return true;
-                }
+                return true;
             }
+
+            if (get(sessionUrlString + "/create") == "true")
+            {
+                return true;
+            }
+
             return false;
         }
 
         public bool partyExists()
         {
-            if (!string.IsNullOrEmpty(SessionID) && !string.IsNullOrEmpty(PartyLeader))
+            if (string.IsNullOrEmpty(sessionUrlString) || string.IsNullOrEmpty(PartyLeader))
             {
-                if (get(sessionUrlString + "/exists") == "true")
-                {
-                    return true;
-                }
+                return false;
+            }
+            if (get(sessionUrlString + "/exists") == "true")
+            {
+                return true;
             }
             return false;
         }
 
-        public bool deleteSession()
+        public void quitSession()
         {
             Debug.Assert(partyExists());
-            Debug.Assert(isPartyLeader);
-
-            if (partyExists() && isPartyLeader)
+            if (partyExists())
             {
-                string result = get(sessionUrlString + "/delete");
-                if (result == "true")
+                if (isPartyLeader)
                 {
-                    SessionID = "";
-                    PartyLeader = "";
-                    return true;
+                    get(sessionUrlString + "/delete");
                 }
-                Debugger.Error("[Sync] Error in Synchandler.deleteSession(): " + result);
+                SessionID = "";
+                PartyLeader = "";
+                isInParty = false;
+                isPartyLeader = false;
+                Debugger.Log("[Sync] Left session");
             }
-            return false;
         }
 
-        public bool replaceMonster(int monsterIndex)
+        public void removeMonster(int monsterIndex)
         {
-            Debug.Assert(isMonsterIndexValid(monsterIndex));
-            Debug.Assert(isPartyLeader);
+            get(sessionUrlString + "/monster/" + monsterIndex + "/remove");
+        }
 
-            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
+        public void pushPartHP(int monsterIndex, int partIndex)
+        {
+            try
             {
-                string result = get(sessionUrlString + "/monster/" + monsterIndex + "/replace");
-                try
+                float hp = parts[monsterIndex][partIndex].Health;
+                if (float.IsNaN(hp))
                 {
-                    return bool.Parse(result);
+                    hp = 0;
                 }
-                catch (Exception e)
-                {
-                    Debugger.Error("[Sync] Error in Synchandler.replaceMonster(" + monsterIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
-                }
+                get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp);
             }
-            return false;
-        }
-
-        public void clearParts(int monsterIndex)
-        {
-            get(sessionUrlString + "/monster/" + monsterIndex + "/clearparts");
-        }
-
-        public void clearAilments(int monsterIndex)
-        {
-            get(sessionUrlString + "/monster/" + monsterIndex + "/clearailments");
-        }
-
-        public bool pushPartHP(int monsterIndex, int partIndex)
-        {
-            Debug.Assert(isMonsterIndexValid(monsterIndex));
-            Debug.Assert(isPartyLeader);
-            Debug.Assert(partIndex < parts[monsterIndex].Count);
-            Debug.Assert(partIndex >= 0);
-
-            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
+            catch (IndexOutOfRangeException) //has only occurred on quest start and end so far
             {
-                if (partIndex < parts[monsterIndex].Count && partIndex >= 0)
-                {
-                    float hp = parts[monsterIndex][partIndex].Health;
-                    if (float.IsNaN(hp))
-                    {
-                        hp = 0;
-                    }
-                    string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp);
-                    try
-                    {
-                        return bool.Parse(result);
-                    }
-                    catch (Exception e)
-                    {
-                        Debugger.Error("[Sync] Error in Synchandler.pushPartHP(" + monsterIndex + ", " + partIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
-                    }
-                }
+                Debugger.Error("[Sync] IndexOutOfRangeException in pushPartHP");
             }
-            return false;
         }
 
-        public bool pushAilmentBuildup(int monsterIndex, int ailmentIndex)
+        public void pushAilmentBuildup(int monsterIndex, int ailmentIndex)
         {
-            Debug.Assert(isMonsterIndexValid(monsterIndex));
-            Debug.Assert(isPartyLeader);
-            Debug.Assert(ailmentIndex < ailments[monsterIndex].Count);
-            Debug.Assert(ailmentIndex >= 0);
-
-            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
+            try
             {
-                if (ailmentIndex < ailments[monsterIndex].Count && ailmentIndex >= 0)
+                float buildup = ailments[monsterIndex][ailmentIndex].Buildup;
+                if (float.IsNaN(buildup))
                 {
-                    float buildup = ailments[monsterIndex][ailmentIndex].Buildup;
-                    if (float.IsNaN(buildup))
+                    buildup = 0;
+                }
+                get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
+            }
+            catch (IndexOutOfRangeException) //has only occurred on quest start and end so far
+            {
+                Debugger.Error("[Sync] IndexOutOfRangeException in pushAilmentBuildup");
+            }
+        }
+
+        public void pullPartHP(int monsterIndex, int partIndex)
+        {
+            string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp");
+            try
+            {
+                parts[monsterIndex][partIndex].Health = int.Parse(result);
+            }
+            catch (IndexOutOfRangeException) //has only occurred on quest start and end so far
+            {
+                Debugger.Error("[Sync] IndexOutOfRangeException in pullPartHP");
+            }
+            catch (Exception e)
+            {
+                Debugger.Error("[Sync] Exception occured in pullPartHP: " + e.Message);
+                Debugger.Error("[Sync] Return value: " + result);
+            }
+        }
+
+        public void pullAilmentBuildup(int monsterIndex, int ailmentIndex)
+        {
+            string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup");
+            try
+            {
+                ailments[monsterIndex][ailmentIndex].Buildup = int.Parse(result);
+            }
+            catch (IndexOutOfRangeException) //has only occurred on quest start and end so far
+            {
+                Debugger.Error("[Sync] IndexOutOfRangeException in pullAilmentBuildup");
+            }
+            catch (Exception e)
+            {
+                Debugger.Error("[Sync] Exception occured in pullAilmentBuildup: " + e.Message);
+                Debugger.Error("[Sync] Return value: " + result);
+            }
+        }
+
+        public void pushAllPartHP()
+        {
+            try
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    for (int j = 0; j < parts[i].Count; j++)
                     {
-                        buildup = 0;
-                    }
-                    string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
-                    try
-                    {
-                        return bool.Parse(result);
-                    }
-                    catch (Exception e)
-                    {
-                        Debugger.Error("[Sync] Error in Synchandler.pushAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
+                        pushPartHP(i, j);
                     }
                 }
             }
-            return false;
+            catch (IndexOutOfRangeException) //should never be reached and will be removed after some testing
+            {
+                Debugger.Error("[Sync] <CRITICAL> IndexOutOfRangeException in pushAllPartHP");
+            }
         }
 
-        public bool pullPartHP(int monsterIndex, int partIndex)
+        private void pushAllAilmentBuildup()
         {
-            Debug.Assert(isMonsterIndexValid(monsterIndex));
-            Debug.Assert(!isPartyLeader);
-            Debug.Assert(partIndex < parts[monsterIndex].Count);
-            Debug.Assert(partIndex >= 0);
-
-            if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
+            try
             {
-                if (partIndex < parts[monsterIndex].Count && partIndex >= 0)
+                for (int i = 0; i < 3; i++)
                 {
-                    string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp");
-                    //if (result != "false")
+                    for (int j = 0; j < ailments[i].Count; j++)
                     {
-                        try
-                        {
-                            parts[monsterIndex][partIndex].Health = int.Parse(result);
-                            return true;
-                        }
-                        catch (Exception e)
-                        {
-                            Debugger.Error("[Sync] Exception occured in Synchandler.pullPartHP(" + monsterIndex + ", " + partIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
-                        }
+                        pushAilmentBuildup(i, j);
                     }
                 }
             }
-            return false;
+            catch (IndexOutOfRangeException) //should never be reached and will be removed after some testing
+            {
+                Debugger.Error("[Sync] <CRITICAL> IndexOutOfRangeException in pushAllAilmentBuildup");
+            }
         }
 
-        public bool pullAilmentBuildup(int monsterIndex, int ailmentIndex)
+        private void pullAllPartHP()
         {
-            Debug.Assert(isMonsterIndexValid(monsterIndex));
-            Debug.Assert(!isPartyLeader);
-            Debug.Assert(ailmentIndex < ailments[monsterIndex].Count);
-            Debug.Assert(ailmentIndex >= 0);
-
-            if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
+            try
             {
-                if (ailmentIndex < ailments[monsterIndex].Count && ailmentIndex >= 0)
+                for (int i = 0; i < 3; i++)
                 {
-                    string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup");
-                    //if (result != "false")
+                    for (int j = 0; j < parts[i].Count; j++)
                     {
-                        try
-                        {
-                            ailments[monsterIndex][ailmentIndex].Buildup = int.Parse(result);//todo: check if monster has been captured
-                            return true;
-                        }
-                        catch (Exception e)
-                        {
-                            Debugger.Error("[Sync] Exception occured in Synchandler.pullAilmentBuildup(" + monsterIndex + ", " + ailmentIndex + "): " + e.Message + "\n[Sync] Return value: " + result);
-                        }
+                        pullPartHP(i, j);
                     }
                 }
             }
-            return false;
+            catch (IndexOutOfRangeException) //should never be reached and will be removed after some testing
+            {
+                Debugger.Error("[Sync] <CRITICAL> IndexOutOfRangeException in pullAllPartHP");
+            }
         }
 
-        public bool pushAllPartHP(int monsterIndex)
+        private void pullAllAilmentBuildup()
         {
-            Debug.Assert(isMonsterIndexValid(monsterIndex));
-            Debug.Assert(isPartyLeader);
-
-            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
+            try
             {
-                for (int i = 0; i < parts[monsterIndex].Count; i++)
+                for (int i = 0; i < 3; i++)
                 {
-                    if (!pushPartHP(monsterIndex, i))
+                    for (int j = 0; j < ailments[i].Count; j++)
                     {
-                        return false;
+                        pullAilmentBuildup(i, j);
                     }
                 }
             }
-            else
+            catch (IndexOutOfRangeException) //should never be reached and will be removed after some testing
             {
-                return false;
+                Debugger.Error("[Sync] <CRITICAL> IndexOutOfRangeException in pullAllAilmentBuildup");
             }
-            return true;
-        }
-
-        private bool pushAllAilmentBuildup(int monsterIndex)
-        {
-            Debug.Assert(isMonsterIndexValid(monsterIndex));
-            Debug.Assert(isPartyLeader);
-
-            if (isMonsterIndexValid(monsterIndex) && isPartyLeader)
-            {
-                for (int i = 0; i < ailments[monsterIndex].Count; i++)
-                {
-                    if (!pushAilmentBuildup(monsterIndex, i))
-                    {
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private bool pullAllPartHP(int monsterIndex)
-        {
-            Debug.Assert(isMonsterIndexValid(monsterIndex));
-            Debug.Assert(!isPartyLeader);
-
-            if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
-            {
-                for (int i = 0; i < parts[monsterIndex].Count; i++)
-                {
-                    if (!pullPartHP(monsterIndex, i))
-                    {
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private bool pullAllAilmentBuildup(int monsterIndex)
-        {
-            Debug.Assert(isMonsterIndexValid(monsterIndex));
-            Debug.Assert(!isPartyLeader);
-
-            if (isMonsterIndexValid(monsterIndex) && !isPartyLeader)
-            {
-                for (int i = 0; i < ailments[monsterIndex].Count; i++)
-                {
-                    if (!pullAilmentBuildup(monsterIndex, i))
-                    {
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                return false;
-            }
-            return true;
         }
     }
 }

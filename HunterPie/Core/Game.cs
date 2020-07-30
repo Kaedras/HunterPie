@@ -132,14 +132,6 @@ namespace HunterPie.Core
         {
             if (Player.InPeaceZone) Time = null;
             else { Time = DateTime.UtcNow; }
-
-            if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
-            {
-                if (synchandler.isPartyLeader && synchandler.partyExists())
-                {
-                    synchandler.deleteSession();
-                }
-            }
         }
 
         private void StartGameScanner()

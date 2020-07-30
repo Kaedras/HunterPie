@@ -908,7 +908,7 @@
                                     <Binding Mode="OneTime" XPath="Settings/String[@ID='STATIC_SYNC_DELAY']/@Name" FallbackValue="Synchronisation delay:"/>
                                 </TextBlock.Text>
                             </TextBlock>
-                            <Slider x:Name="SyncDelay" Style="{StaticResource Horizontal_Slider}" Foreground="#FF3C3C3C" Maximum="2000" Minimum="100" SmallChange="10" Value="500" Canvas.Top="5" IsSnapToTickEnabled="True" Margin="10,0" MinWidth="300" LargeChange="100" TickFrequency="100" ValueChanged="SyncDelay_ValueChanged" />
+                            <Slider x:Name="SyncDelay" Style="{StaticResource Horizontal_Slider}" Foreground="#FF3C3C3C" Maximum="2000" Minimum="100" Canvas.Top="5" IsSnapToTickEnabled="True" Margin="10,0" MinWidth="300" TickFrequency="10" MouseLeave="SyncDelay_MouseLeave"/>
                             <TextBlock Text="{Binding Value, ElementName=SyncDelay}" FontFamily="Segoe UI Light" Foreground="WhiteSmoke"/>
                         </DockPanel>
                     </StackPanel>

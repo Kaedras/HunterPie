@@ -187,7 +187,7 @@ namespace HunterPie.GUIControls
 
         private void SwitchEnableAilments_MouseDown(object sender, MouseButtonEventArgs e) => AilmentsCustomizer.IsEnabled = switchEnableAilments.IsEnabled;
 
-        private void SyncDelay_ValueChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+        private void SyncDelay_MouseLeave(object sender, MouseEventArgs e)
         {
             UserSettings.PlayerConfig.HunterPie.Sync.Delay = (int)SyncDelay.Value;
         }
