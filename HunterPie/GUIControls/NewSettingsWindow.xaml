@@ -897,7 +897,7 @@
                 </TabItem.Header>
                 <ScrollViewer>
                     <StackPanel >
-                        <custom:Switcher x:Name="switchEnableSync" Text="{Binding Mode=OneTime, XPath=/Strings/Client/Settings/String[@ID\=\'ENABLE_SYNC\']/@Name, FallbackValue='Enable experimental synchronisation'}" RestartVisibility="Visible" MinWidth="500" ToolTip="{Binding Mode=OneTime, XPath=/Strings/Client/Settings/String[@ID\=\'ENABLE_SYNC_DESC\']/@Name}" HorizontalAlignment="Center"/>
+                        <custom:Switcher x:Name="switchEnableSync" Text="{Binding Mode=OneTime, XPath=/Strings/Client/Settings/String[@ID\=\'ENABLE_SYNC\']/@Name, FallbackValue='Enable experimental synchronisation'}" RestartVisibility="Visible" MinWidth="500" ToolTip="{Binding Mode=OneTime, XPath=/Strings/Client/Settings/String[@ID\=\'ENABLE_SYNC_DESC\']/@Name}" HorizontalAlignment="Center" IsEnabledChanged="switchEnableSync_IsEnabledChanged"/>
                         <DockPanel HorizontalAlignment="Center" MinWidth="500">
                             <TextBlock Text="{Binding Mode=OneTime, XPath=/Strings/Client/Settings/String[@ID\=\'STATIC_SYNCSERVER\']/@Name, FallbackValue='Server address:'}" Foreground="WhiteSmoke" Canvas.Top="0" FontFamily="Segoe UI Light" Width="100" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                             <TextBox x:Name="syncServerTextBox" TextWrapping="Wrap" Background="{x:Null}" Foreground="#FF9E9D9D" BorderBrush="#FFABADB3" BorderThickness="0,0,0,1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="300" SelectionBrush="#FFD31D1D" MinWidth="200" Margin="0" Canvas.Top="0" HorizontalAlignment="Right" />

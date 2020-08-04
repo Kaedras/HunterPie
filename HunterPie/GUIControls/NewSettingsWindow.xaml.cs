@@ -191,5 +191,13 @@ namespace HunterPie.GUIControls
         {
             UserSettings.PlayerConfig.HunterPie.Sync.Delay = (int)SyncDelay.Value;
         }
+
+        private void switchEnableSync_IsEnabledChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
+        {
+            if (!switchEnableSync.IsEnabled)
+            {
+                Synchandler.stopSyncThread();
+            }
+        }
     }
 }

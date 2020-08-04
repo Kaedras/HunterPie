@@ -15,37 +15,34 @@ namespace HunterPie.Core
 
         private int delay
         {
-            get
-            {
-                return UserSettings.PlayerConfig.HunterPie.Sync.Delay;
-            }
+            get => UserSettings.PlayerConfig.HunterPie.Sync.Delay;
         }
 
         private int retries = 5;
         private Thread syncThreadReference;
-        private bool stopThread = false;
+        private static bool stopThread = false;
         private string sessionUrlString = "";
         private string _sessionID = "";
 
-        public string SessionID
+        public string sessionID
         {
             get => _sessionID;
             set
             {
                 _sessionID = HttpUtility.UrlEncode(value);
-                sessionUrlString = serverUrl + "/session/" + SessionID + PartyLeader;
+                sessionUrlString = serverUrl + "/session/" + sessionID + partyLeader;
             }
         }
 
         private string _partyLeader = "";
 
-        public string PartyLeader
+        public string partyLeader
         {
             get => _partyLeader;
             set
             {
                 _partyLeader = HttpUtility.UrlEncode(value);
-                sessionUrlString = serverUrl + "/session/" + SessionID + PartyLeader;
+                sessionUrlString = serverUrl + "/session/" + sessionID + partyLeader;
             }
         }
 
@@ -79,7 +76,7 @@ namespace HunterPie.Core
             syncThreadReference.Start();
         }
 
-        public void stopSyncThread()
+        public static void stopSyncThread()
         {
             stopThread = true;
         }
@@ -91,8 +88,8 @@ namespace HunterPie.Core
                 Debug.Assert(!string.IsNullOrEmpty(url));
                 if (url != serverUrl)
                 { //if function is not called by isServerAlive()
-                    Debug.Assert(!string.IsNullOrEmpty(PartyLeader));
-                    Debug.Assert(!string.IsNullOrEmpty(SessionID));
+                    Debug.Assert(!string.IsNullOrEmpty(partyLeader));
+                    Debug.Assert(!string.IsNullOrEmpty(sessionID));
                 }
                 WebRequest request = WebRequest.Create(Uri.EscapeUriString(url));
                 WebResponse response = request.GetResponse();
@@ -193,6 +190,7 @@ namespace HunterPie.Core
 
             if (get(sessionUrlString + "/create") == "true")
             {
+                Debugger.Log("[Sync] Created session");
                 return true;
             }
 
@@ -201,7 +199,7 @@ namespace HunterPie.Core
 
         public bool partyExists()
         {
-            if (string.IsNullOrEmpty(sessionUrlString) || string.IsNullOrEmpty(PartyLeader))
+            if (string.IsNullOrEmpty(sessionUrlString) || string.IsNullOrEmpty(partyLeader))
             {
                 return false;
             }
@@ -214,19 +212,15 @@ namespace HunterPie.Core
 
         public void quitSession()
         {
-            Debug.Assert(partyExists());
-            if (partyExists())
+            if (isPartyLeader)
             {
-                if (isPartyLeader)
-                {
-                    get(sessionUrlString + "/delete");
-                }
-                SessionID = "";
-                PartyLeader = "";
-                isInParty = false;
-                isPartyLeader = false;
-                Debugger.Log("[Sync] Left session");
+                get(sessionUrlString + "/delete");
             }
+            sessionID = "";
+            partyLeader = "";
+            isInParty = false;
+            isPartyLeader = false;
+            Debugger.Log("[Sync] Left session");
         }
 
         public void removeMonster(int monsterIndex)
@@ -243,7 +237,11 @@ namespace HunterPie.Core
                 {
                     hp = 0;
                 }
-                get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp);
+                string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp);
+                if (result != "true")
+                {
+                    Debugger.Error("[Sync] pushPartHP: " + result);
+                }
             }
             catch (IndexOutOfRangeException) //has only occurred on quest start and end so far
             {
@@ -260,7 +258,11 @@ namespace HunterPie.Core
                 {
                     buildup = 0;
                 }
-                get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
+                string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
+                if (result != "true")
+                {
+                    Debugger.Error("[Sync] pushAilmentBuildup: " + result);
+                }
             }
             catch (IndexOutOfRangeException) //has only occurred on quest start and end so far
             {

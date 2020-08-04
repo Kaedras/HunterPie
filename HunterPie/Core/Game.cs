@@ -120,7 +120,7 @@ namespace HunterPie.Core
             IsActive = false;
             if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
             {
-                synchandler.stopSyncThread();
+                Synchandler.stopSyncThread();
             }
         }
 

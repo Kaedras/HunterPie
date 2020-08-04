@@ -560,7 +560,7 @@ namespace HunterPie
                     {
                         MonsterHunter.synchandler.quitSession();
                     }
-                    MonsterHunter.synchandler.SessionID = MonsterHunter.Player.SessionID;
+                    MonsterHunter.synchandler.sessionID = MonsterHunter.Player.SessionID;
                 }
             }
         }

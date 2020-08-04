@@ -725,12 +725,12 @@ namespace HunterPie.Core
                     }
                     if (!synchandler.isInParty && !string.IsNullOrEmpty(SessionID))
                     {
-                        synchandler.SessionID = SessionID;
+                        synchandler.sessionID = SessionID;
                         for (int i = 0; i < PlayerParty.Size; i++)
                         {
                             if (PlayerParty.Members[i].IsPartyLeader)
                             {
-                                synchandler.PartyLeader = PlayerParty.Members[i].Name;
+                                synchandler.partyLeader = PlayerParty.Members[i].Name;
                                 synchandler.isPartyLeader = PlayerParty.Members[i].IsMe;
                                 if (PlayerParty.Members[i].IsMe)
                                 {
