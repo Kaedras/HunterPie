@@ -223,9 +223,9 @@ namespace HunterPie.Core
             Debugger.Log("[Sync] Left session");
         }
 
-        public void removeMonster(int monsterIndex)
+        public void clearMonster(int monsterIndex)
         {
-            get(sessionUrlString + "/monster/" + monsterIndex + "/remove");
+            get(sessionUrlString + "/monster/" + monsterIndex + "/clear");
         }
 
         public void pushPartHP(int monsterIndex, int partIndex)
