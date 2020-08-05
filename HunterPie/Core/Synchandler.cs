@@ -238,7 +238,7 @@ namespace HunterPie.Core
                     hp = 0;
                 }
                 string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp);
-                if (result != "true")
+                if (result != "true" && result != "error: session does not exist")
                 {
                     Debugger.Error("[Sync] pushPartHP: " + result);
                 }
@@ -259,7 +259,7 @@ namespace HunterPie.Core
                     buildup = 0;
                 }
                 string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
-                if (result != "true")
+                if (result != "true" && result != "error: session does not exist")
                 {
                     Debugger.Error("[Sync] pushAilmentBuildup: " + result);
                 }
@@ -308,73 +308,45 @@ namespace HunterPie.Core
 
         public void pushAllPartHP()
         {
-            try
+            for (int i = 0; i < parts.Count; i++)
             {
-                for (int i = 0; i < 3; i++)
+                for (int j = 0; j < parts[i].Count; j++)
                 {
-                    for (int j = 0; j < parts[i].Count; j++)
-                    {
-                        pushPartHP(i, j);
-                    }
+                    pushPartHP(i, j);
                 }
-            }
-            catch (IndexOutOfRangeException) //should never be reached and will be removed after some testing
-            {
-                Debugger.Error("[Sync] <CRITICAL> IndexOutOfRangeException in pushAllPartHP");
             }
         }
 
         private void pushAllAilmentBuildup()
         {
-            try
+            for (int i = 0; i < parts.Count; i++)
             {
-                for (int i = 0; i < 3; i++)
+                for (int j = 0; j < ailments[i].Count; j++)
                 {
-                    for (int j = 0; j < ailments[i].Count; j++)
-                    {
-                        pushAilmentBuildup(i, j);
-                    }
+                    pushAilmentBuildup(i, j);
                 }
-            }
-            catch (IndexOutOfRangeException) //should never be reached and will be removed after some testing
-            {
-                Debugger.Error("[Sync] <CRITICAL> IndexOutOfRangeException in pushAllAilmentBuildup");
             }
         }
 
         private void pullAllPartHP()
         {
-            try
+            for (int i = 0; i < parts.Count; i++)
             {
-                for (int i = 0; i < 3; i++)
+                for (int j = 0; j < parts[i].Count; j++)
                 {
-                    for (int j = 0; j < parts[i].Count; j++)
-                    {
-                        pullPartHP(i, j);
-                    }
+                    pullPartHP(i, j);
                 }
-            }
-            catch (IndexOutOfRangeException) //should never be reached and will be removed after some testing
-            {
-                Debugger.Error("[Sync] <CRITICAL> IndexOutOfRangeException in pullAllPartHP");
             }
         }
 
         private void pullAllAilmentBuildup()
         {
-            try
+            for (int i = 0; i < parts.Count; i++)
             {
-                for (int i = 0; i < 3; i++)
+                for (int j = 0; j < ailments[i].Count; j++)
                 {
-                    for (int j = 0; j < ailments[i].Count; j++)
-                    {
-                        pullAilmentBuildup(i, j);
-                    }
+                    pullAilmentBuildup(i, j);
                 }
-            }
-            catch (IndexOutOfRangeException) //should never be reached and will be removed after some testing
-            {
-                Debugger.Error("[Sync] <CRITICAL> IndexOutOfRangeException in pullAllAilmentBuildup");
             }
         }
     }
