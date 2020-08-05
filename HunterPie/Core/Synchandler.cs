@@ -238,8 +238,12 @@ namespace HunterPie.Core
                     hp = 0;
                 }
                 string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp);
-                if (result != "true" && result != "error: session does not exist")
+                if (result != "true")
                 {
+                    if (result == "error: session does not exist" && !isInParty) //if quitSession has been called while executing this function
+                    {
+                        return;
+                    }
                     Debugger.Error("[Sync] pushPartHP: " + result);
                 }
             }
@@ -259,8 +263,12 @@ namespace HunterPie.Core
                     buildup = 0;
                 }
                 string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
-                if (result != "true" && result != "error: session does not exist")
+                if (result != "true")
                 {
+                    if (result == "error: session does not exist" && !isInParty) //if quitSession has been called while executing this function
+                    {
+                        return;
+                    }
                     Debugger.Error("[Sync] pushAilmentBuildup: " + result);
                 }
             }
@@ -283,6 +291,10 @@ namespace HunterPie.Core
             }
             catch (Exception e)
             {
+                if (result == "error: session does not exist" && !isInParty) //if quitSession has been called while executing this function
+                {
+                    return;
+                }
                 Debugger.Error("[Sync] Exception occured in pullPartHP: " + e.Message);
                 Debugger.Error("[Sync] Return value: " + result);
             }
@@ -301,6 +313,10 @@ namespace HunterPie.Core
             }
             catch (Exception e)
             {
+                if (result == "error: session does not exist" && !isInParty) //if quitSession has been called while executing this function
+                {
+                    return;
+                }
                 Debugger.Error("[Sync] Exception occured in pullAilmentBuildup: " + e.Message);
                 Debugger.Error("[Sync] Return value: " + result);
             }
