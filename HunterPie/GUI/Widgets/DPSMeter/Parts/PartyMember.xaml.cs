@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using HunterPie.Core;
+using HunterPie.Logger;
 
 namespace HunterPie.GUI.Widgets.DPSMeter.Parts
 {
@@ -69,7 +70,7 @@ namespace HunterPie.GUI.Widgets.DPSMeter.Parts
 
         public void UpdateDamage()
         {
-            float TimeElapsed = (float)PartyContext.Epoch.TotalSeconds;
+            float TimeElapsed = (float)PartyContext.Epoch.TotalSeconds - (float)PartyContext.TimeDifference.TotalSeconds;
             Dispatch(() =>
             {
                 DamagePerSecond.Text = $"{Context.Damage / TimeElapsed:0.00}/s";
