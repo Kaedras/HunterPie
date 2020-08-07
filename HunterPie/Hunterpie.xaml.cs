@@ -33,7 +33,6 @@ namespace HunterPie
     {
         // TODO: Refactor all this messy code
 
-
         // Classes
         TrayIcon TrayIcon;
         readonly Game MonsterHunter = new Game();
@@ -44,7 +43,7 @@ namespace HunterPie
         bool IsUpdating = true;
 
         // HunterPie version
-        const string HUNTERPIE_VERSION = "1.0.3.95";
+        const string HUNTERPIE_VERSION = "1.0.3.96";
 
         // Helpers
         IntPtr _windowHandle;
