@@ -69,7 +69,7 @@ namespace HunterPie.Core
         {
             if (serverUrl == "http://")
             {
-                Debugger.Error("[Sync] Sync server url is empty");
+                Debugger.Error("[Sync] Sync server URL is empty");
                 return;
             }
             syncThreadReference = new Thread(new ThreadStart(syncThread));
@@ -102,7 +102,7 @@ namespace HunterPie.Core
             }
             catch (Exception e)
             {
-                Debugger.Error("[Sync] Exception occured in get(" + url + "): " + e.Message);
+                Debugger.Error("[Sync] Exception occurred in get(" + url + "): " + e.Message);
                 return "false";
             }
         }
@@ -295,7 +295,7 @@ namespace HunterPie.Core
                 {
                     return;
                 }
-                Debugger.Error("[Sync] Exception occured in pullPartHP: " + e.Message);
+                Debugger.Error("[Sync] Exception occurred in pullPartHP: " + e.Message);
                 Debugger.Error("[Sync] Return value: " + result);
             }
         }
@@ -317,7 +317,7 @@ namespace HunterPie.Core
                 {
                     return;
                 }
-                Debugger.Error("[Sync] Exception occured in pullAilmentBuildup: " + e.Message);
+                Debugger.Error("[Sync] Exception occurred in pullAilmentBuildup: " + e.Message);
                 Debugger.Error("[Sync] Return value: " + result);
             }
         }
