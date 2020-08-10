@@ -240,7 +240,7 @@ namespace HunterPie.Core
                 string result = get(sessionUrlString + "/monster/" + monsterIndex + "/part/" + partIndex + "/hp/" + (int)hp);
                 if (result != "true")
                 {
-                    if (result == "error: session does not exist" && !isInParty) //if quitSession has been called while executing this function
+                    if ((result == "error: session does not exist" && !isInParty) || result == "error 404") //if quitSession has been called while executing this function
                     {
                         return;
                     }
@@ -265,7 +265,7 @@ namespace HunterPie.Core
                 string result = get(sessionUrlString + "/monster/" + monsterIndex + "/ailment/" + ailmentIndex + "/buildup/" + (int)buildup);
                 if (result != "true")
                 {
-                    if (result == "error: session does not exist" && !isInParty) //if quitSession has been called while executing this function
+                    if ((result == "error: session does not exist" && !isInParty) || result == "error 404") //if quitSession has been called while executing this function
                     {
                         return;
                     }
@@ -291,7 +291,7 @@ namespace HunterPie.Core
             }
             catch (Exception e)
             {
-                if (result == "error: session does not exist" && !isInParty) //if quitSession has been called while executing this function
+                if (result == "error: session does not exist") //if quitSession has been called while executing this function
                 {
                     return;
                 }
@@ -313,7 +313,7 @@ namespace HunterPie.Core
             }
             catch (Exception e)
             {
-                if (result == "error: session does not exist" && !isInParty) //if quitSession has been called while executing this function
+                if (result == "error: session does not exist") //if quitSession has been called while executing this function
                 {
                     return;
                 }
