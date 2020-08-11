@@ -249,8 +249,7 @@ namespace HunterPie.Core
             public class Sync
             {
                 public bool Enabled { get; set; } = false;
-                public string ServerUrl { get; set; } = "";
-                public int Delay { get; set; } = 500;
+                public int Delay { get; set; } = 200;
             }
         }
 

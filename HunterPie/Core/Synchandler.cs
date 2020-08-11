@@ -11,7 +11,7 @@ namespace HunterPie.Core
 {
     public class Synchandler
     {
-        private string serverUrl = "http://" + UserSettings.PlayerConfig.HunterPie.Sync.ServerUrl;
+        private static readonly string serverUrl = "http://mhwsync.herokuapp.com";
 
         private int delay
         {
@@ -67,11 +67,6 @@ namespace HunterPie.Core
 
         public void startSyncThread()
         {
-            if (serverUrl == "http://")
-            {
-                Debugger.Error("[Sync] Sync server URL is empty");
-                return;
-            }
             syncThreadReference = new Thread(new ThreadStart(syncThread));
             syncThreadReference.Start();
         }
@@ -102,7 +97,7 @@ namespace HunterPie.Core
             }
             catch (Exception e)
             {
-                Debugger.Error("[Sync] Exception occurred in get(" + url + "): " + e.Message);
+                Debugger.Error("[Sync] " + e.GetType() + " occurred in get(" + url + "): " + e.Message);
                 return "false";
             }
         }
@@ -289,7 +284,7 @@ namespace HunterPie.Core
             {
                 Debugger.Error("[Sync] IndexOutOfRangeException in pullPartHP");
             }
-            catch (Exception e)
+            catch (FormatException e)
             {
                 if (result == "error: session does not exist") //if quitSession has been called while executing this function
                 {
@@ -311,7 +306,7 @@ namespace HunterPie.Core
             {
                 Debugger.Error("[Sync] IndexOutOfRangeException in pullAilmentBuildup");
             }
-            catch (Exception e)
+            catch (FormatException e)
             {
                 if (result == "error: session does not exist") //if quitSession has been called while executing this function
                 {

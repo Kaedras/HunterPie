@@ -186,7 +186,6 @@ namespace HunterPie.GUIControls
             
             // Synchronisation settings
             settingsUI.switchEnableSync.IsEnabled = settings.HunterPie.Sync.Enabled;
-            settingsUI.syncServerTextBox.Text = settings.HunterPie.Sync.ServerUrl;
             settingsUI.SyncDelay.Value = settings.HunterPie.Sync.Delay;
 
         }
@@ -332,7 +331,6 @@ namespace HunterPie.GUIControls
 
             // Synchronisation settings
             settings.HunterPie.Sync.Enabled = settingsUI.switchEnableSync.IsEnabled;
-            settings.HunterPie.Sync.ServerUrl = settingsUI.syncServerTextBox.Text;
             settings.HunterPie.Sync.Delay = (int)settingsUI.SyncDelay.Value;
 
             // and then save settings
