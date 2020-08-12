@@ -585,7 +585,7 @@ namespace HunterPie
         {
             if (MonsterHunter.Player.IsLoggedOn)
             {
-                Debugger.Log($"ZoneID: {MonsterHunter.Player.ZoneID}");
+                Debugger.Debug($"ZoneID: {MonsterHunter.Player.ZoneID}");
                 ExportGameData();
 
                 if (UserSettings.PlayerConfig.HunterPie.Sync.Enabled)
