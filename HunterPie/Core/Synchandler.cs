@@ -81,11 +81,6 @@ namespace HunterPie.Core
             try
             {
                 Debug.Assert(!string.IsNullOrEmpty(url));
-                if (url != serverUrl)
-                { //if function is not called by isServerAlive()
-                    Debug.Assert(!string.IsNullOrEmpty(partyLeader));
-                    Debug.Assert(!string.IsNullOrEmpty(sessionID));
-                }
                 WebRequest request = WebRequest.Create(Uri.EscapeUriString(url));
                 WebResponse response = request.GetResponse();
                 Stream stream = response.GetResponseStream();
@@ -123,7 +118,7 @@ namespace HunterPie.Core
                 }
             }
 
-            Debugger.Log("[Sync] Connected to server " + serverUrl);
+            Debugger.Log("[Sync] Connected to server");
 
             bool msgShown = false;
 
