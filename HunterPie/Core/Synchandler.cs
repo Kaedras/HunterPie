@@ -11,7 +11,7 @@ namespace HunterPie.Core
 {
     public class Synchandler
     {
-        private static readonly string serverUrl = "http://mhwsync.herokuapp.com";
+        private const string serverUrl = "http://mhwsync.herokuapp.com";
 
         private int delay
         {
