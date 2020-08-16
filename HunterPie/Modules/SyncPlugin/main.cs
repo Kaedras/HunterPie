@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
 using System.Web;
 using HunterPie.Core;
-using Debugger = HunterPie.Logger.Debugger;
+using HunterPie.Logger;
 
 namespace HunterPie.Plugins
 {
     public class SyncPlugin : IPlugin
     {
-        private const int Delay = 200;
         private const string ServerUrl = "http://mhwsync.herokuapp.com";
         private string partyLeader = "";
         private int retries = 5;
@@ -66,17 +64,21 @@ namespace HunterPie.Plugins
             }
 
             Context = context;
-            
+
             Context.Player.OnSessionChange += OnSessionChange;
+            Context.Player.OnCharacterLogin += OnZoneChange;
             Context.Player.OnCharacterLogout += OnCharacterLogout;
             Context.Player.OnZoneChange += OnZoneChange;
             Context.FirstMonster.OnHPUpdate += OnHPUpdate;
+            Context.FirstMonster.OnMonsterSpawn += OnMonsterSpawn;
             Context.FirstMonster.OnMonsterDespawn += OnMonsterDespawn;
             Context.FirstMonster.OnMonsterDeath += OnMonsterDeath;
             Context.SecondMonster.OnHPUpdate += OnHPUpdate;
+            Context.SecondMonster.OnMonsterSpawn += OnMonsterSpawn;
             Context.SecondMonster.OnMonsterDespawn += OnMonsterDespawn;
             Context.SecondMonster.OnMonsterDeath += OnMonsterDeath;
             Context.ThirdMonster.OnHPUpdate += OnHPUpdate;
+            Context.ThirdMonster.OnMonsterSpawn += OnMonsterSpawn;
             Context.ThirdMonster.OnMonsterDespawn += OnMonsterDespawn;
             Context.ThirdMonster.OnMonsterDeath += OnMonsterDeath;
         }
@@ -84,26 +86,33 @@ namespace HunterPie.Plugins
         public void Unload()
         {
             Context.Player.OnSessionChange -= OnSessionChange;
+            Context.Player.OnCharacterLogin -= OnZoneChange;
             Context.Player.OnCharacterLogout -= OnCharacterLogout;
             Context.Player.OnZoneChange -= OnZoneChange;
             Context.FirstMonster.OnHPUpdate -= OnHPUpdate;
+            Context.FirstMonster.OnMonsterSpawn += OnMonsterSpawn;
             Context.FirstMonster.OnMonsterDespawn -= OnMonsterDespawn;
             Context.FirstMonster.OnMonsterDeath -= OnMonsterDeath;
             Context.SecondMonster.OnHPUpdate -= OnHPUpdate;
+            Context.SecondMonster.OnMonsterSpawn += OnMonsterSpawn;
             Context.SecondMonster.OnMonsterDespawn -= OnMonsterDespawn;
             Context.SecondMonster.OnMonsterDeath -= OnMonsterDeath;
             Context.ThirdMonster.OnHPUpdate -= OnHPUpdate;
+            Context.ThirdMonster.OnMonsterSpawn -= OnMonsterSpawn;
             Context.ThirdMonster.OnMonsterDespawn -= OnMonsterDespawn;
             Context.ThirdMonster.OnMonsterDeath -= OnMonsterDeath;
 
-            for(int i = 0; i < Context.FirstMonster.Ailments.Count; i++) {
-                monster.Ailments[i].OnBuildupChange -= OnBuildupChange;
+            for (int i = 0; i < Context.FirstMonster.Ailments.Count; i++)
+            {
+                Context.FirstMonster.Ailments[i].OnBuildupChange -= OnBuildupChange;
             }
-            for (int i = 0; i < Context.SecondMonster.Ailments.Count; i++) {
-                monster.Ailments[i].OnBuildupChange -= OnBuildupChange;
+            for (int i = 0; i < Context.SecondMonster.Ailments.Count; i++)
+            {
+                Context.SecondMonster.Ailments[i].OnBuildupChange -= OnBuildupChange;
             }
-            for (int i = 0; i < Context.ThirdMonster.Ailments.Count; i++) {
-                monster.Ailments[i].OnBuildupChange -= OnBuildupChange;
+            for (int i = 0; i < Context.ThirdMonster.Ailments.Count; i++)
+            {
+                Context.ThirdMonster.Ailments[i].OnBuildupChange -= OnBuildupChange;
             }
         }
 
@@ -132,7 +141,6 @@ namespace HunterPie.Plugins
         {
             try
             {
-                Debug.Assert(!string.IsNullOrEmpty(url));
                 WebRequest request = WebRequest.Create(Uri.EscapeUriString(url));
                 WebResponse response = request.GetResponse();
                 Stream stream = response.GetResponseStream();
@@ -151,13 +159,10 @@ namespace HunterPie.Plugins
 
         private void initializeAilments(Monster monster)
         {
-            throw new NotImplementedException();
-            /*
             for (int i = 0; i < monster.Ailments.Count; i++)
             {
                 monster.Ailments[i].OnBuildupChange += OnBuildupChange;
             }
-            */
         }
 
         private bool isServerAlive()
@@ -176,7 +181,15 @@ namespace HunterPie.Plugins
 
         private void OnBuildupChange(object source, MonsterAilmentEventArgs args)
         {
-            throw new NotImplementedException();
+            if (processBuildup(Context.FirstMonster, (Ailment)source))
+            {
+                return;
+            }
+            if (processBuildup(Context.SecondMonster, (Ailment)source))
+            {
+                return;
+            }
+            processBuildup(Context.ThirdMonster, (Ailment)source);
         }
 
         private void OnCharacterLogout(object source, EventArgs args)
@@ -211,6 +224,10 @@ namespace HunterPie.Plugins
             }
         }
 
+        private void OnMonsterSpawn(object source, MonsterSpawnEventArgs args)
+        {
+            initializeAilments((Monster)source);
+        }
         private void OnSessionChange(object source, EventArgs args)
         {
             if (isInParty)
@@ -263,7 +280,7 @@ namespace HunterPie.Plugins
 
         private bool partyExists()
         {
-            if (string.IsNullOrEmpty(sessionUrlString) || string.IsNullOrEmpty(partyLeader))
+            if (string.IsNullOrEmpty(sessionUrlString) || string.IsNullOrEmpty(partyLeader) || string.IsNullOrEmpty(sessionID))
             {
                 return false;
             }
@@ -272,6 +289,45 @@ namespace HunterPie.Plugins
                 return true;
             }
             return false;
+        }
+
+        private bool processBuildup(Monster target, Ailment ailment)
+        {
+            int value;
+            for (int i = 0; i < target.Ailments.Count; i++)
+            {
+                if (target.Ailments[i].Equals(ailment))
+                {
+                    if (float.IsNaN(ailment.Buildup))
+                    {
+                        value = 0;
+                    }
+                    else
+                    {
+                        value = (int)ailment.Buildup;
+                    }
+                    pushAilment(target.MonsterNumber - 1, i, value);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void pullAilmentBuildup(Monster monster)
+        {
+            string result;
+            for (int i = 0; i < monster.Ailments.Count; i++)
+            {
+                result = get(sessionUrlString + "/monster/" + (monster.MonsterNumber - 1) + "/ailment/" + i + "/buildup");
+                try
+                {
+                    monster.Parts[i].Health = int.Parse(result);
+                }
+                catch (FormatException)
+                {
+                    log("FormatException in pullPartHP: " + result);
+                }
+            }
         }
 
         private void pullPartHP(Monster monster)
@@ -284,13 +340,21 @@ namespace HunterPie.Plugins
                 {
                     monster.Parts[i].Health = int.Parse(result);
                 }
-                catch (Exception e)
+                catch (FormatException)
                 {
-                    log(e.GetType() + " in pullPartHP: " + e.Message);
+                    log("FormatException in pullPartHP: " + result);
                 }
             }
         }
 
+        private void pushAilment(int monsterindex, int ailmentindex, int buildup)
+        {
+            string result = get(sessionUrlString + "/monster/" + monsterindex + "/ailments/" + ailmentindex + "/buildup/" + buildup);
+            if (result != "true")
+            {
+                log("error in pushAilment: " + result);
+            }
+        }
         private void pushPartHP(Monster monster)
         {
             float hp;
@@ -359,7 +423,10 @@ namespace HunterPie.Plugins
                 pullPartHP(Context.FirstMonster);
                 pullPartHP(Context.SecondMonster);
                 pullPartHP(Context.ThirdMonster);
-                Thread.Sleep(Delay);
+                pullAilmentBuildup(Context.FirstMonster);
+                pullAilmentBuildup(Context.SecondMonster);
+                pullAilmentBuildup(Context.ThirdMonster);
+                Thread.Sleep(UserSettings.PlayerConfig.Overlay.GameScanDelay);
             }
         }
     }
