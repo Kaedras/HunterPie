@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading;
 using System.Web;
 using HunterPie.Core;
+using HunterPie.Core.Events;
 using HunterPie.Logger;
 
 namespace HunterPie.Plugins
