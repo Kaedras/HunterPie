@@ -238,13 +238,23 @@ namespace HunterPie.Plugins
                 stopSyncThread();
             }
             SessionID = Context.Player.SessionID;
-            OnZoneChange(source, args);
+            InitializeSessionAsync();
         }
 
         private void OnZoneChange(object source, EventArgs args)
         {
+            InitializeSessionAsync();
+        }
+
+        private async void InitializeSessionAsync() {
+            await System.Threading.Tasks.Task.Yield();
+            Thread.Sleep(2000);
             if (Context.Player.InPeaceZone)
             {
+                if(isInParty)
+                {
+                    quitSession();
+                }
                 return;
             }
 
@@ -270,9 +280,13 @@ namespace HunterPie.Plugins
                     if (isInParty)
                     {
                         log("Entered session");
+                        stopMonsterThreads();
+                        startSyncThread();
                     }
-                    stopMonsterThreads();
-                    startSyncThread();
+                    else
+                    {
+                        log("There is no session to enter");
+                    }
                 }
                 else
                 {
