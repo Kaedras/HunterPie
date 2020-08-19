@@ -67,7 +67,7 @@ namespace HunterPie.Plugins
             Context = context;
 
             Context.Player.OnSessionChange += OnSessionChange;
-            Context.Player.OnCharacterLogin += OnZoneChange;
+            //Context.Player.OnCharacterLogin += OnZoneChange;
             Context.Player.OnCharacterLogout += OnCharacterLogout;
             Context.Player.OnZoneChange += OnZoneChange;
             Context.FirstMonster.OnHPUpdate += OnHPUpdate;
@@ -87,7 +87,7 @@ namespace HunterPie.Plugins
         public void Unload()
         {
             Context.Player.OnSessionChange -= OnSessionChange;
-            Context.Player.OnCharacterLogin -= OnZoneChange;
+            //Context.Player.OnCharacterLogin -= OnZoneChange;
             Context.Player.OnCharacterLogout -= OnCharacterLogout;
             Context.Player.OnZoneChange -= OnZoneChange;
             Context.FirstMonster.OnHPUpdate -= OnHPUpdate;
@@ -126,6 +126,7 @@ namespace HunterPie.Plugins
         {
             if (partyExists())
             {
+                log("Did not create session because it already exists");
                 return true;
             }
 
@@ -182,15 +183,15 @@ namespace HunterPie.Plugins
 
         private void OnBuildupChange(object source, MonsterAilmentEventArgs args)
         {
-            if (processBuildup(Context.FirstMonster, (Ailment)source))
-            {
-                return;
+            if (isPartyLeader) {
+                if (processBuildup(Context.FirstMonster, (Ailment)source)) {
+                    return;
+                }
+                if (processBuildup(Context.SecondMonster, (Ailment)source)) {
+                    return;
+                }
+                processBuildup(Context.ThirdMonster, (Ailment)source);
             }
-            if (processBuildup(Context.SecondMonster, (Ailment)source))
-            {
-                return;
-            }
-            processBuildup(Context.ThirdMonster, (Ailment)source);
         }
 
         private void OnCharacterLogout(object source, EventArgs args)
@@ -237,6 +238,7 @@ namespace HunterPie.Plugins
                 stopSyncThread();
             }
             SessionID = Context.Player.SessionID;
+            OnZoneChange(source, args);
         }
 
         private void OnZoneChange(object source, EventArgs args)
@@ -257,6 +259,9 @@ namespace HunterPie.Plugins
                 {
                     isPartyLeader = true;
                     isInParty = createPartyIfNotExist();
+                    if(!isInParty){
+                        log("Could not create session");
+                    }
                 }
                 else if (Context.Player.PlayerParty.Members[i].IsMe && !Context.Player.PlayerParty.Members[i].IsPartyLeader && Context.Player.PlayerParty.Members[i].IsInParty)
                 {
@@ -350,7 +355,7 @@ namespace HunterPie.Plugins
 
         private void pushAilment(int monsterindex, int ailmentindex, int buildup)
         {
-            string result = get(sessionUrlString + "/monster/" + monsterindex + "/ailments/" + ailmentindex + "/buildup/" + buildup);
+            string result = get(sessionUrlString + "/monster/" + monsterindex + "/ailment/" + ailmentindex + "/buildup/" + buildup);
             if (result != "true")
             {
                 log("error in pushAilment: " + result);
