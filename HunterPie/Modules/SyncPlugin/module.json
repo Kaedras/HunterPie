@@ -4,5 +4,7 @@
     "Description": "Part and ailment synchronization for HunterPie",
     "Author": "Kaedras",
     "Version": "1.0.0",
-    "Dependencies": [ "libs\\System.Web.dll" ]
+    "Dependencies": [
+        "lib\\System.Web.dll"
+    ]
 }
