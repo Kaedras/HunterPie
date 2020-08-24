@@ -46,7 +46,7 @@ namespace HunterPie.Plugins {
                 foreach (Status s in Enum.GetValues(typeof(Status))) {
                     count += list[s];
                 }
-                count -= list[Status.ok];
+                count -= list[Status.ok]; //Status.ok is not an error, so it shouldn't be included
                 return count;
             }
         }
@@ -55,7 +55,7 @@ namespace HunterPie.Plugins {
             return list[status];
         }
 
-        public void clear() {
+        public void clear() { //set all status counts to 0
             foreach (Status s in Enum.GetValues(typeof(Status))) {
                 list[s] = 0;
             }
@@ -178,11 +178,13 @@ namespace HunterPie.Plugins {
                 return true;
             }
 
-            if (get(sessionUrlString + "/create").status == Status.ok) {
+            Response r = get(sessionUrlString + "/create");
+            if (r.status == Status.ok) {
                 log("Created session");
                 return true;
+            } else {
+                log("Error creating session: " + r.status + " - " + r.value);
             }
-
             return false;
         }
 
@@ -218,7 +220,7 @@ namespace HunterPie.Plugins {
         }
 
         private bool isServerAlive() {
-            if (get(ServerUrl).status == 0) {
+            if (get(ServerUrl).status == Status.ok) {
                 return true;
             }
             return false;
@@ -229,6 +231,7 @@ namespace HunterPie.Plugins {
         }
 
         private void OnBuildupChange(object source, MonsterAilmentEventArgs args) {
+            //ailment does not contain any information about the monster it is attached to, so every ailment on every monster has to be checked if it is the same object
             if (isPartyLeader) {
                 if (processBuildup(Context.FirstMonster, (Ailment)source)) {
                     return;
@@ -269,7 +272,7 @@ namespace HunterPie.Plugins {
         }
 
         private void OnSessionChange(object source, EventArgs args) {
-            if (isInParty) {
+            if (isInParty) { //quit old session
                 quitSession();
                 stopSyncThread();
             }
@@ -291,18 +294,18 @@ namespace HunterPie.Plugins {
                 return;
             }
 
-            for (int i = 0; i < Context.Player.PlayerParty.Members.Count; i++) {
+            for (int i = 0; i < Context.Player.PlayerParty.Members.Count; i++) { //check if player is party leader
                 if (Context.Player.PlayerParty.Members[i].IsPartyLeader) {
                     PartyLeader = Context.Player.PlayerParty.Members[i].Name;
                 }
 
-                if (Context.Player.PlayerParty.Members[i].IsMe && Context.Player.PlayerParty.Members[i].IsPartyLeader && Context.Player.PlayerParty.Members[i].IsInParty) {
+                if (Context.Player.PlayerParty.Members[i].IsMe && Context.Player.PlayerParty.Members[i].IsPartyLeader && Context.Player.PlayerParty.Members[i].IsInParty) { //player is party leader
                     isPartyLeader = true;
                     isInParty = createPartyIfNotExist();
                     if (!isInParty) {
                         log("Could not create session");
                     }
-                } else if (Context.Player.PlayerParty.Members[i].IsMe && !Context.Player.PlayerParty.Members[i].IsPartyLeader && Context.Player.PlayerParty.Members[i].IsInParty) {
+                } else if (Context.Player.PlayerParty.Members[i].IsMe && !Context.Player.PlayerParty.Members[i].IsPartyLeader && Context.Player.PlayerParty.Members[i].IsInParty) { //player is not party leader
                     isPartyLeader = false;
                     isInParty = partyExists();
                     if (isInParty) {
@@ -311,10 +314,9 @@ namespace HunterPie.Plugins {
                         startSyncThread();
                     } else {
                         log("There is no session to enter");
-                    }
-                } else {
-                    if (monsterThreadsStopped) {
-                        startMonsterThreads();
+                        if (monsterThreadsStopped) {
+                            startMonsterThreads();
+                        }
                     }
                 }
             }
@@ -332,7 +334,7 @@ namespace HunterPie.Plugins {
 
         private bool processBuildup(Monster target, Ailment ailment) {
             int value;
-            for (int i = 0; i < target.Ailments.Count; i++) {
+            for (int i = 0; i < target.Ailments.Count; i++) { //check if ailment is on target, if so send data to server
                 if (target.Ailments[i].Equals(ailment)) {
                     if (float.IsNaN(ailment.Buildup)) {
                         value = 0;
@@ -343,7 +345,7 @@ namespace HunterPie.Plugins {
                     return true;
                 }
             }
-            return false;
+            return false; //ailment has not been found
         }
 
         private void pullAilmentBuildup(Monster monster) {
@@ -353,7 +355,7 @@ namespace HunterPie.Plugins {
                 if (result.status == Status.ok) {
                     monster.Parts[i].Health = int.Parse(result.value);
                 } else {
-                    if (statusList.count(result.status) <= 1) { //status count has already been incremented
+                    if (statusList.count(result.status) == 1) { //only show first error of each type; status count has already been incremented if error has occurred
                         log("error in pullAilmentBuildup: " + result.value);
                     }
                 }
@@ -367,7 +369,7 @@ namespace HunterPie.Plugins {
                 if (result.status == Status.ok) {
                     monster.Parts[i].Health = int.Parse(result.value);
                 } else {
-                    if (statusList.count(result.status) <= 1) { //status count has already been incremented
+                    if (statusList.count(result.status) == 1) { //only show first error of each type; status count has already been incremented if error has occurred
                         log("error in pullPartHP: " + result.value);
                     }
                 }
@@ -377,7 +379,7 @@ namespace HunterPie.Plugins {
         private void pushAilment(int monsterindex, int ailmentindex, int buildup) {
             Response result = get(sessionUrlString + "/monster/" + monsterindex + "/ailment/" + ailmentindex + "/buildup/" + buildup);
             if (result.status != Status.ok) {
-                if (statusList.count(result.status) <= 1) { //status count has already been incremented
+                if (statusList.count(result.status) == 1) { //only show first error of each type; status count has already been incremented if error has occurred
                     log("error in pushAilment: " + result.value);
                 }
             }
@@ -393,7 +395,7 @@ namespace HunterPie.Plugins {
                 }
                 result = get(sessionUrlString + "/monster/" + (monster.MonsterNumber - 1) + "/part/" + i + "/hp/" + (int)hp);
                 if (result.status != Status.ok) {
-                    if (statusList.count(result.status) <= 1) { //status count has already been incremented
+                    if (statusList.count(result.status) == 1) { //only show first error of each type; status count has already been incremented if error has occurred
                         log("error in pushPartHP: " + result.value);
                     }
                 }
