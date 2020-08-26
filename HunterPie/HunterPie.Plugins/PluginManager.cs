@@ -94,19 +94,21 @@ namespace HunterPie.Plugins
                     continue;
                 }
             }
+            IsReady = true;
             benchmark.Stop();
             Debugger.Module($"Pre loaded {packages.Count} module(s) in {benchmark.ElapsedMilliseconds}ms");
             if (QueueLoad)
             {
                 LoadPlugins();
             }
+            
         }
 
         public void UnloadPlugins()
         {
             foreach (PluginPackage package in packages)
             {
-                package.plugin.Unload();
+                UnloadPlugin(package.plugin);
             }
             Debugger.Module("Unloaded all modules.");
         }
